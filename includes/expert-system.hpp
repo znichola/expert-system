@@ -1,0 +1,5 @@
+#ifndef EXPERT_SYSTEM_HPP
+# define EXPERT_SYSTEM_HPP
+
+
+#endif /* EXPERT_SYSTEM_HPP */
