@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 
+#include "expert-system.hpp"
 
 struct InputOptions {
     bool isHelp = false;
@@ -36,6 +37,10 @@ int main(int argc, char ** argv) {
         std::cerr << "Startup error | " << e.what() << std::endl;
         return 1;
     }
+
+    // MAIN ENTRY POINT
+
+
 
     return 0;
 }
