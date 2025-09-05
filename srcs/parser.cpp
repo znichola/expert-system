@@ -10,10 +10,20 @@ std::vector<Token> tokenize(const std::string &input) {
 }
 
 
-std::vector<Fact> parse(const std::vector<Token> &input) {
+std::vector<Rule> parseRules(const std::vector<Token> &input) {
     (void)input;
     return {};
 }
 
 
+std::vector<Fact> parseFacts(const std::vector<Token> &input) {
+    (void)input;
+    return {};
+}
+
+
+std::vector<Query> parseQueries(const std::vector<Token> &input) {
+    (void)input;
+    return {};
+}
 

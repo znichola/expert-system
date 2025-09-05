@@ -15,7 +15,7 @@ endif
 
 LEAKS_CHECK = valgrind
 
-FILES	= parser
+FILES	= parser evaluator
 
 MAIN_SRC	= srcs/main.cpp
 MAIN_OBJ	= objs/main.o
