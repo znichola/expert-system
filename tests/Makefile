@@ -46,6 +46,9 @@ run_all_tests: $(UNIT_TESTS)
 		./$$t || exit 1; echo "";\
 	done
 
+run_%: %
+	./$<
+
 clean:
 	-rm -f $(OBJS)
 
