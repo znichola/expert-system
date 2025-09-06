@@ -13,11 +13,11 @@ Imply::Imply(const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
   Iff::Iff  (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
 
 char Var::value() const { return _v; }
-Expr Not::child() const { return _v[1]; }
-Expr And::lhs()   const { return _v[1]; } Expr And::rhs()   const { return _v[1]; }
-Expr Or::lhs()    const { return _v[1]; } Expr Or::rhs()    const { return _v[1]; }
-Expr Xor::lhs()   const { return _v[1]; } Expr Xor::rhs()   const { return _v[1]; }
-Expr Imply::lhs() const { return _v[1]; } Expr Imply::rhs() const { return _v[1]; }
-Expr Iff::lhs()   const { return _v[1]; } Expr Iff::rhs()   const { return _v[1]; }
+Expr Not::child() const { return _v[0]; }
+Expr And::lhs()   const { return _v[0]; } Expr And::rhs()   const { return _v[1]; }
+Expr Or::lhs()    const { return _v[0]; } Expr Or::rhs()    const { return _v[1]; }
+Expr Xor::lhs()   const { return _v[0]; } Expr Xor::rhs()   const { return _v[1]; }
+Expr Imply::lhs() const { return _v[0]; } Expr Imply::rhs() const { return _v[1]; }
+Expr Iff::lhs()   const { return _v[0]; } Expr Iff::rhs()   const { return _v[1]; }
 
 

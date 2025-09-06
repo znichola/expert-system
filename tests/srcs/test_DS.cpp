@@ -16,11 +16,16 @@ int main() {
 //         << std::visit(Printer{}, e)
 //         << std::endl;
 
-    Expr e = And(Var('A'), Var('B'));
+    Expr e = Imply(Or(Var('A'), And(Var('B'), Var('C'))), Var('D'));
 
     std::cout << "Test expression:"
      << std::endl
      << std::visit(Printer{}, e)
+     << std::endl;
+
+    std::cout << "Test formal logic printer:"
+     << std::endl
+     << std::visit(PrinterFormalLogic{}, e)
      << std::endl;
 
     return 0;

@@ -13,7 +13,7 @@
  * of Expr... infinite recursion!
  *
  * The solution is something to give it a constant size on the stack, we could 
- * use pointer, but who whant to deal with that headache. We can also use an
+ * use pointer, but who wants to deal with that headache. We can also use an
  * std::vector the container can manager the pointer for us.
  * */
 
@@ -112,6 +112,41 @@ struct Printer {
 };
 
 
+struct PrinterFormalLogic {
+    std::string operator()(const Var &v) const
+        { return std::string(1, v.value()); }
+    std::string operator()(const Not &n) const
+        { return "¬" + std::visit(*this, n.child()); }
+    std::string operator()(const And &n) const
+        { return "(" + std::visit(*this, n.lhs()) + " ∧  ⇒" + std::visit(*this, n.rhs()) + ")"; }
+    std::string operator()(const Or &n) const
+        { return "(" + std::visit(*this, n.lhs()) + " ∨ " + std::visit(*this, n.rhs()) + ")"; }
+    std::string operator()(const Xor &n) const
+        { return "(" + std::visit(*this, n.lhs()) + " ⊕ " + std::visit(*this, n.rhs()) + ")"; }
+    std::string operator()(const Imply &n) const
+        { return "(" + std::visit(*this, n.lhs()) + " ⇒ " + std::visit(*this, n.rhs()) + ")"; }
+    std::string operator()(const Iff &n) const
+        { return "(" + std::visit(*this, n.lhs()) + " ⇔ " + std::visit(*this, n.rhs()) + ")"; }
+};
+
+
+// This is only half implemented
+struct PrinterExplenation {
+    std::string operator()(const Var &v) const
+    { return std::string(1, v.value()); }
+    std::string operator()(const Not &n) const
+    { return "not " + std::visit(*this, n.child()); }
+    std::string operator()(const And &n) const
+    { return std::visit(*this, n.lhs()) + " and " + std::visit(*this, n.rhs()); }
+    std::string operator()(const Or &n) const
+    { return std::visit(*this, n.lhs()) + " or " + std::visit(*this, n.rhs()); }
+    std::string operator()(const Xor &n) const
+    { return std::visit(*this, n.lhs()) + " xor " + std::visit(*this, n.rhs()); }
+    std::string operator()(const Imply &n) const
+    { return std::visit(*this, n.lhs()) + " implies " + std::visit(*this, n.rhs()); }
+    std::string operator()(const Iff &n) const
+    { return std::visit(*this, n.lhs()) + " if-and-only-if " + std::visit(*this, n.rhs()); }
+};
 
 #endif /* EXPRESSION_HPP */
 
