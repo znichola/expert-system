@@ -2,34 +2,22 @@
 #include <memory>
 #include <variant>
 
-#include "expert-system.hpp"
+#include "expression.hpp"
 
-Var::Var(char v) : value(v) {}
+  Var::Var  (char v) : _v(v) {}
+  Not::Not  (const Expr c) : _v{std::move(c)} {}
+  And::And  (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
+   Or::Or   (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
+  Xor::Xor  (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
+Imply::Imply(const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
+  Iff::Iff  (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
 
-Not::Not(Expr c) : child(std::make_unique<Expr>(std::move(c))) {}
-
-And::And(Expr l, Expr r) : lhs(std::make_unique<Expr>(std::move(l))),
-    rhs(std::make_unique<Expr>(std::move(r))) {}
-
-Or::Or(Expr l, Expr r) : lhs(std::make_unique<Expr>(std::move(l))),
-    rhs(std::make_unique<Expr>(std::move(r))) {}
-
-Xor::Xor(Expr l, Expr r) : lhs(std::make_unique<Expr>(std::move(l))),
-    rhs(std::make_unique<Expr>(std::move(r))) {}
-
-Imply::Imply(Expr l, Expr r) : lhs(std::make_unique<Expr>(std::move(l))),
-    rhs(std::make_unique<Expr>(std::move(r))) {}
-
-Iff::Iff(Expr l, Expr r) : lhs(std::make_unique<Expr>(std::move(l))),
-    rhs(std::make_unique<Expr>(std::move(r))) {}
-
-
-Expr make_var(char v) { return Var{v}; }
-Expr make_not(Expr c) { return Not{std::move(c)}; }
-Expr make_and(Expr l, Expr r) { return And{std::move(l), std::move(r)}; }
-Expr make_or(Expr l, Expr r) { return Or{std::move(l), std::move(r)}; }
-Expr make_xor(Expr l, Expr r) { return Xor{std::move(l), std::move(r)}; }
-Expr make_imply(Expr l, Expr r) { return Imply{std::move(l), std::move(r)}; }
-Expr make_iff(Expr l, Expr r) { return Iff{std::move(l), std::move(r)}; }
+char Var::value() const { return _v; }
+Expr Not::child() const { return _v[1]; }
+Expr And::lhs()   const { return _v[1]; } Expr And::rhs()   const { return _v[1]; }
+Expr Or::lhs()    const { return _v[1]; } Expr Or::rhs()    const { return _v[1]; }
+Expr Xor::lhs()   const { return _v[1]; } Expr Xor::rhs()   const { return _v[1]; }
+Expr Imply::lhs() const { return _v[1]; } Expr Imply::rhs() const { return _v[1]; }
+Expr Iff::lhs()   const { return _v[1]; } Expr Iff::rhs()   const { return _v[1]; }
 
 

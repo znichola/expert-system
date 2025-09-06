@@ -7,14 +7,21 @@
 
 int main() {
 
-    Expr e = make_xor(
-            make_and(make_var('A'), make_not(make_var('B'))),
-            make_and(make_var('C'), make_var('D')));
+//     Expr e = make_xor(
+//             make_and(make_var('A'), make_not(make_var('B'))),
+//             make_and(make_var('C'), make_var('D')));
+// 
+//     std::cout << "Test expression:"
+//         << std::endl
+//         << std::visit(Printer{}, e)
+//         << std::endl;
+
+    Expr e = And(Var('A'), Var('B'));
 
     std::cout << "Test expression:"
-        << std::endl
-        << std::visit(Printer{}, e)
-        << std::endl;
+     << std::endl
+     << std::visit(Printer{}, e)
+     << std::endl;
 
     return 0;
 }
