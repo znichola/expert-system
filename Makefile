@@ -15,6 +15,8 @@ endif
 
 LEAKS_CHECK = valgrind
 
+EXAMPLE_FILE = example_file.txt
+
 FILES	= parser evaluator
 
 MAIN_SRC	= srcs/main.cpp
@@ -45,7 +47,15 @@ fclean	: clean
 re	: fclean all
 
 leaks : re
-	$(LEAKS_CHECK) ./$(NAME)
+	$(LEAKS_CHECK) ./$(NAME) $(EXAMPLE_FILE)
 
-.PHONY: clean fclean re leaks
+run : all
+	$(LEAKS_CHECK) ./$(NAME) $(EXAMPLE_FILE)
+
+LIBNAME = libES.a
+
+# Rule to archive object files into a static library.
+# Useful for testing
+$(LIBNAME): $(OBJS)
+	ar rcs $(LIBNAME) $(OBJS)
 
