@@ -98,26 +98,27 @@ struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
     bool isSimpleExpr() const;
 };
 
+using std::visit;
 
 struct Printer {
     std::string operator()(const Var &v) const
         { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
-        { return "!" + std::visit(*this, n.child()); }
+        { return "!" + visit(*this, n.child()); }
     std::string operator()(const And &n) const
-        { return "(" + std::visit(*this, n.lhs()) + "+" + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + "+" + visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Or &n) const
-        { return "(" + std::visit(*this, n.lhs()) + "|" + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + "|" + visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Xor &n) const
-        { return "(" + std::visit(*this, n.lhs()) + "^" + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + "^" + visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Imply &n) const
-        { return "(" + std::visit(*this, n.lhs()) + "=>" + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + "=>" + visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Iff &n) const
-        { return "(" + std::visit(*this, n.lhs()) + "<=>" + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + "<=>" + visit(*this, n.rhs()) + ")"; }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Expr& e) {
-    os << std::visit(Printer{}, e);
+    os << visit(Printer{}, e);
     return os;
 }
 
@@ -125,17 +126,17 @@ struct PrinterFormalLogic {
     std::string operator()(const Var &v) const
         { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
-        { return "¬" + std::visit(*this, n.child()); }
+        { return "¬" + visit(*this, n.child()); }
     std::string operator()(const And &n) const
-        { return "(" + std::visit(*this, n.lhs()) + " ∧ " + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + " ∧ " + visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Or &n) const
-        { return "(" + std::visit(*this, n.lhs()) + " ∨ " + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + " ∨ " + visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Xor &n) const
-        { return "(" + std::visit(*this, n.lhs()) + " ⊕ " + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + " ⊕ " + visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Imply &n) const
-        { return "(" + std::visit(*this, n.lhs()) + " ⇒ " + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + " ⇒ " + visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Iff &n) const
-        { return "(" + std::visit(*this, n.lhs()) + " ⇔ " + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + visit(*this, n.lhs()) + " ⇔ " + visit(*this, n.rhs()) + ")"; }
 };
 
 
@@ -144,17 +145,17 @@ struct PrinterExplenation {
     std::string operator()(const Var &v) const
     { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
-    { return "not " + std::visit(*this, n.child()); }
+    { return "not " + visit(*this, n.child()); }
     std::string operator()(const And &n) const
-    { return std::visit(*this, n.lhs()) + " and " + std::visit(*this, n.rhs()); }
+    { return visit(*this, n.lhs()) + " and " + visit(*this, n.rhs()); }
     std::string operator()(const Or &n) const
-    { return std::visit(*this, n.lhs()) + " or " + std::visit(*this, n.rhs()); }
+    { return visit(*this, n.lhs()) + " or " + visit(*this, n.rhs()); }
     std::string operator()(const Xor &n) const
-    { return std::visit(*this, n.lhs()) + " xor " + std::visit(*this, n.rhs()); }
+    { return visit(*this, n.lhs()) + " xor " + visit(*this, n.rhs()); }
     std::string operator()(const Imply &n) const
-    { return std::visit(*this, n.lhs()) + " implies " + std::visit(*this, n.rhs()); }
+    { return visit(*this, n.lhs()) + " implies " + visit(*this, n.rhs()); }
     std::string operator()(const Iff &n) const
-    { return std::visit(*this, n.lhs()) + " if-and-only-if " + std::visit(*this, n.rhs()); }
+    { return visit(*this, n.lhs()) + " if-and-only-if " + visit(*this, n.rhs()); }
 };
 
 // used to unpack the variant and get lhs & rhs values if they exist
