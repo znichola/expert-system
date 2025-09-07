@@ -5,6 +5,7 @@
 # include <memory>
 # include <variant>
 # include <vector>
+# include <optional>
 
 /*
  * The funcamental issue with this shit is :
@@ -91,6 +92,10 @@ private:
 
 struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
     using std::variant<Var, Not, And, Or, Xor, Imply, Iff>::variant;
+    Expr() = delete; // want to remove the defualt no args constuctions
+                     // it's a completly invalid state!
+    bool isValidRule() const;
+    bool isSimpleExpr() const;
 };
 
 
@@ -111,6 +116,10 @@ struct Printer {
         { return "(" + std::visit(*this, n.lhs()) + "<=>" + std::visit(*this, n.rhs()) + ")"; }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const Expr& e) {
+    os << std::visit(Printer{}, e);
+    return os;
+}
 
 struct PrinterFormalLogic {
     std::string operator()(const Var &v) const
@@ -118,7 +127,7 @@ struct PrinterFormalLogic {
     std::string operator()(const Not &n) const
         { return "¬" + std::visit(*this, n.child()); }
     std::string operator()(const And &n) const
-        { return "(" + std::visit(*this, n.lhs()) + " ∧  ⇒" + std::visit(*this, n.rhs()) + ")"; }
+        { return "(" + std::visit(*this, n.lhs()) + " ∧ " + std::visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Or &n) const
         { return "(" + std::visit(*this, n.lhs()) + " ∨ " + std::visit(*this, n.rhs()) + ")"; }
     std::string operator()(const Xor &n) const
@@ -147,6 +156,26 @@ struct PrinterExplenation {
     std::string operator()(const Iff &n) const
     { return std::visit(*this, n.lhs()) + " if-and-only-if " + std::visit(*this, n.rhs()); }
 };
+
+// used to unpack the variant and get lhs & rhs values if they exist
+struct BinaryGetter {
+    std::optional<Expr> lhs, rhs;
+
+    void operator()(const And &op)   { lhs = op.lhs(); rhs = op.rhs(); }
+    void operator()(const Or &op)    { lhs = op.lhs(); rhs = op.rhs(); }
+    void operator()(const Xor &op)   { lhs = op.lhs(); rhs = op.rhs(); }
+    void operator()(const Imply &op) { lhs = op.lhs(); rhs = op.rhs(); }
+    void operator()(const Iff &op)   { lhs = op.lhs(); rhs = op.rhs(); }
+
+    void operator()(const Var &) {}
+    void operator()(const Not &) {}
+};
+
+
+//////////////////////////////////////////
+/// FUNCITONS
+/// 
+/// and usefull stuffs
 
 #endif /* EXPRESSION_HPP */
 
