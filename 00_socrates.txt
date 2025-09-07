@@ -1,0 +1,13 @@
+# Socrates
+
+# Rules
+M => D # All men are mortal
+
+# Facts about Socrates
+=M # He is a man
+
+# Query about Socrates
+?D # Is he mortal?
+
+# Know your Aristotle
+# https://proofwiki.org/wiki/Socrates_is_Mortal
