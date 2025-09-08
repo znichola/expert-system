@@ -1,9 +1,9 @@
 # 42
 
 # Rules
-A => L & U & E  # if X is the ultimate answer, then life, the universe and everything are explained
+A => L & U & E  # if X is the ultimate answer, then X explains: life, the universe and everything
 
-L & U & E => M  # if X explains Life, the universe and everthing, then it is meaningful
+L & U & E => M  # if X explains Life, the universe and everthing, then X is meaningful
 
 # Facts about 42
 =A # 42 is the answer

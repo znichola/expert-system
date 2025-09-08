@@ -41,6 +41,48 @@ int main(int argc, char ** argv) {
     // MAIN ENTRY POINT
 
 
+
+    // can throw on invalid token
+    // tokenize(input) -> token[]
+
+    // A+B<=>H # this is OK
+
+    // G => f  # tokenizer error
+
+    // G => H | H & B # parsing error
+
+    // G | ( H => L ) # parsing error
+
+    // G | L # also parsing error
+
+
+    // can throw on invalid syntax (eg. see above)
+    // parseRules(token[]) -> {rules[], errors[]}
+    // parseFacts(token[]) -> facts[]
+    // parseQueries(token[]) -> queries[]
+
+    // can throw on contracdicting rules
+    // solver(everyting) -> solved variables & written explication
+
+    // To solve:
+    // 1) check if value is solved
+    // 2) if not, find a rule that solves this value
+    // 3) check if this rule is solved?
+    // 4) if yes, solve it and return
+    // 5) if no, add the rules values to the "to solve" list
+
+    // SOLVER
+
+    // this is a funciton that takes as input the list of rules, 
+    // the goals for this solving, and the list of facts
+    // this will return the list of solved goals, and the rules used to solve this
+
+    // solve(fact[], rules[], reasoning[], query) -> (reasoning[], fact[])
+    
+    
+
+
+
     return 0;
 }
 
