@@ -20,6 +20,12 @@ int main() {
 //         << std::visit(Printer{}, e)
 //         << std::endl;
 
+    cout << "Test foo" << endl;
+    
+
+
+    return 0;
+
     Expr e = Imply(Or(Var('A'), And(Var('B'), Var('C'))), Var('D'));
 
     cout << "Test expression:"

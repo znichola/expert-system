@@ -24,7 +24,7 @@ Expr Iff::lhs()   const { return _v[0]; } Expr Iff::rhs()   const { return _v[1]
 
 bool Expr::isValidRule() const {
 
-    // has imply or Iff at root, maybe this is wrong?
+    // has imply or Iff at root
     if (!std::holds_alternative<Imply>(*this)
             && !std::holds_alternative<Iff>(*this)) {
         return false;
@@ -65,5 +65,5 @@ bool Expr::isSimpleExpr() const {
             && std::holds_alternative<Var>(op.rhs());
     }
 
-    return false; // Not, Imply, Iff are not allowed in RHS
+    return false;
 }
