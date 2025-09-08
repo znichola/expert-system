@@ -1,4 +1,4 @@
-CC		= g++
+CC		= clang++
 CFLAGS	= -Wall -Wextra
 CFLAGS	+= -Werror
 CFLAGS	+= -std=c++17 #-pedantic
