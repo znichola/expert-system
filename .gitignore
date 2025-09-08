@@ -2,3 +2,4 @@
 *.swp
 objs
 libES.a
+.vscode
