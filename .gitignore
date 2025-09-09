@@ -4,3 +4,5 @@ objs
 libES.a
 .vscode
 expert-system
+.timetracker
+
