@@ -15,11 +15,21 @@ int main() {
 
     auto e = Imply(Or(Var('A'), And(Var('B'), Var('C'))), Var('D'));
 
-    auto f = Fact('A');
+    auto f = Fact('A', Fact::State::Undetermined);
+    auto f1 = Fact('B', Fact::State::True);
 
     auto r = Rule(e, 42, "is the answer");
 
+    auto q = Query('A');
+
     cout << e << endl << f << endl << r << endl;
+
+    std::vector<Rule> rules = {r};
+    std::vector<Fact> facts = {f, f1};
+
+    cout << endl << endl << "####";
+    (void)solve(rules, facts, q);
+    cout << "####"<< endl << endl;
 
     return 0;
 }

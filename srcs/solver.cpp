@@ -1,11 +1,22 @@
 #include "expert-system.hpp"
 
-struct Foo {};
+#include <algorithm>
+#include <iostream>
 
-Foo solve(std::vector<Rule> rules, std::vector<Fact> facts, Query query) {
-    (void)rules;
-    (void)facts;
-    (void)query;
+
+Foo solve(
+        const std::vector<Rule> &rules, 
+        const std::vector<Fact> &facts,
+        const Query &query) {
+
+    auto is_an_existing_fact = facts.end() != std::ranges::find_if(facts,
+            [&query](auto const &f) { return f.label == query.label; });
+    if (is_an_existing_fact) {
+        std::cout << "Query is solved";
+        return {}; // this query is solved, plus the new facts list
+    }
+
+
+
     return {};
 }
-
