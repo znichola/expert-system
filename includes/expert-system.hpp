@@ -44,8 +44,8 @@ struct Fact {
 
     const char label;
     State state = State::Undetermined;
-    const std::string comment;
     const int line_number = -1;
+    const std::string comment;
 
     // the rules used for the deduction, if empy it's a base truth
     std::vector<size_t> reasoning; 
@@ -57,8 +57,8 @@ struct Fact {
     Fact(char label, State state) : label(label), state(state) {}
 
     // Construct a fact from inpupt data, with a comment and line number
-    Fact(char label, State state, const std::string &comment, int line_number)
-        : label(label), state(state), comment(comment), line_number(line_number)
+    Fact(char label, State state, int line_number, const std::string &comment)
+        : label(label), state(state), line_number(line_number), comment(comment)
         {}
 
     std::string toString() const {
@@ -77,8 +77,8 @@ inline std::ostream& operator<<(std::ostream& os, const Fact& f) {
 // parseQueries returns a vector of Query
 struct Query {
     const char label;
-    const std::string comment;
     const int line_number = -1;
+    const std::string comment;
 
     Query() = delete;
 
@@ -86,8 +86,8 @@ struct Query {
     explicit Query(char label) : label(label) {};
 
     // Construct a fact from inpupt data, with a comment and line number
-    Query(char label, const std::string &comment, int line_number)
-        : label(label), comment(comment), line_number(line_number) {}
+    Query(char label, int line_number, const std::string &comment)
+        : label(label), line_number(line_number), comment(comment) {}
 
     std::string toString() const {
         return std::string(1, label);

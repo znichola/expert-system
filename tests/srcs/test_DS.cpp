@@ -7,11 +7,15 @@
 
 using std::cout, std::cerr, std::endl;
 
+void testSocratiesRuleSet();
 void testExprValidation();
 
 int main() {
 
     cout << "Test foo" << endl;
+
+    testSocratiesRuleSet();
+    return 0;
 
     auto e = Imply(Or(Var('A'), And(Var('B'), Var('C'))), Var('D'));
 
@@ -33,6 +37,23 @@ int main() {
 
     return 0;
 }
+
+
+void testSocratiesRuleSet() {
+    cout << "### Socraties is a man" << endl;
+    std::vector<Rule> rules = {
+        Rule(Imply(Var('M'), Var('D')), 3, "All men are mortal"),
+    };
+    std::vector<Fact> facts = {
+        Fact('M', Fact::State::True, 6, "He is a man"),
+    };
+
+    auto query = Query('D', 9, "Is he mortal?");
+
+    (void)solve(rules, facts, query);
+
+}
+
 
 void testExprValidation() {
     cout << "Expression validations" << endl;
