@@ -11,34 +11,15 @@ void testExprValidation();
 
 int main() {
 
-//     Expr e = make_xor(
-//             make_and(make_var('A'), make_not(make_var('B'))),
-//             make_and(make_var('C'), make_var('D')));
-// 
-//     std::cout << "Test expression:"
-//         << std::endl
-//         << std::visit(Printer{}, e)
-//         << std::endl;
-
     cout << "Test foo" << endl;
-    
 
+    auto e = Imply(Or(Var('A'), And(Var('B'), Var('C'))), Var('D'));
 
-    return 0;
+    auto f = Fact('A');
 
-    Expr e = Imply(Or(Var('A'), And(Var('B'), Var('C'))), Var('D'));
+    auto r = Rule(e, 42, "is the answer");
 
-    cout << "Test expression:"
-     << endl
-     << std::visit(Printer{}, e)
-     << endl;
-
-    cout << "Test formal logic printer:"
-     << endl
-     << std::visit(PrinterFormalLogic{}, e)
-     << endl;
-
-    testExprValidation();
+    cout << e << endl << f << endl << r << endl;
 
     return 0;
 }
