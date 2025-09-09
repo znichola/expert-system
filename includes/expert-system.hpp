@@ -5,6 +5,7 @@
 
 // tokenizer returns a vector of Tokens
 struct Token {
+    std::vector<std::pair<std::string, size_t>> token_list;
     // whatever the token needs
 };
 
@@ -28,5 +29,6 @@ struct Query {
     // A query is the result for a variable
 };
 
+Token tokenizer(std::string input);
 
 #endif /* EXPERT_SYSTEM_HPP */
