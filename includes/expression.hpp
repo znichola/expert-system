@@ -188,7 +188,7 @@ inline bool Expr::contains(const Var &var) const {
         return g.value == var.value();
     }
     if (g.child) {
-        return g.child.value->containes(var);
+       // return g.child.value->containes(var);
     }
     return false;
 }
