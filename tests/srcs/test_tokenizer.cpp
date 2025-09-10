@@ -73,10 +73,15 @@ int main(int argc, char ** argv) {
             return 1;
         }
     }
+    // printf("Input:\n%s\n", input.c_str());
     try {
         Token tokens = tokenizer(input);
-        for (const auto &t : tokens.token_list) {
-            std::cout << "[" << t.second << "] '" << t.first << "'" << std::endl;
+        vector<Fact> facts = parseFacts(tokens);
+        // for (const auto &t : tokens.token_list) {
+        //     std::cout << "[" << t.second << "] '" << t.first << "'" << std::endl;
+        // }
+        for (const auto &f : facts) {
+            std::cout << f.toString() << " in line "<< f.line_number << " with comment " << f.comment <<std::endl;
         }
     } catch (std::exception &e) {
         std::cerr << "Tokenizing error | " << e.what() << std::endl;

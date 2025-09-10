@@ -3,9 +3,17 @@
 
 # include <ostream>
 # include <string>
+# include <iostream>
+# include <fstream>
+# include <sstream>
+# include <string>
+# include <stdexcept>
+
 
 # include "expression.hpp"
 
+using std::string;
+using std::vector;
 
 // tokenizer returns a vector of Tokens
 struct Token {
@@ -19,7 +27,7 @@ struct Rule {
     Expr expr;
     int line_number = -1;
     int index = -1;
-    const std::string comment;
+    std::string comment;
 
     Rule() = delete;
 
@@ -47,7 +55,7 @@ struct Fact {
     const char label;
     State state = State::Undetermined;
     const int line_number = -1;
-    const std::string comment;
+    std::string comment;
 
     // the rules used for the deduction, if empy it's a base truth
     std::vector<int> reasoning;
@@ -80,7 +88,7 @@ inline std::ostream& operator<<(std::ostream& os, const Fact& f) {
 struct Query {
     const char label;
     const int line_number = -1;
-    const std::string comment;
+    std::string comment;
 
     Query() = delete;
 
@@ -109,5 +117,10 @@ Foo solve(const std::vector<Rule> &rules,
 
 /* tokenize.cpp */
 Token tokenizer(std::string input);
+
+/* parser.cpp */
+std::vector<Fact> parseFacts(const Token &input);
+std::vector<Rule> parseRules(const Token &input);
+std::vector<Query> parseQueries(const Token &input);
 
 #endif /* EXPERT_SYSTEM_HPP */
