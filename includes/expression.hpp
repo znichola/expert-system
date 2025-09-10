@@ -89,6 +89,7 @@ private:
     ExprBoxed _v;
 };
 
+struct ValueGetter;
 
 struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
     using std::variant<Var, Not, And, Or, Xor, Imply, Iff>::variant;
@@ -96,6 +97,8 @@ struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
                      // it's a completly invalid state!
     bool isValidRule() const;
     bool isSimpleExpr() const;
+    ValueGetter getValues() const;
+    bool contains(const Var &var) const;
 };
 
 using std::visit;
@@ -159,19 +162,36 @@ struct PrinterExplenation {
 };
 
 // used to unpack the variant and get lhs & rhs values if they exist
-struct BinaryGetter {
-    std::optional<Expr> lhs, rhs;
+struct ValueGetter {
+    std::optional<Expr> child, lhs, rhs;
+    std::optional<char> value;
 
-    void operator()(const And &op)   { lhs = op.lhs(); rhs = op.rhs(); }
-    void operator()(const Or &op)    { lhs = op.lhs(); rhs = op.rhs(); }
-    void operator()(const Xor &op)   { lhs = op.lhs(); rhs = op.rhs(); }
-    void operator()(const Imply &op) { lhs = op.lhs(); rhs = op.rhs(); }
-    void operator()(const Iff &op)   { lhs = op.lhs(); rhs = op.rhs(); }
+    void operator()(const And &n)   { lhs = n.lhs(); rhs = n.rhs(); }
+    void operator()(const Or &n)    { lhs = n.lhs(); rhs = n.rhs(); }
+    void operator()(const Xor &n)   { lhs = n.lhs(); rhs = n.rhs(); }
+    void operator()(const Imply &n) { lhs = n.lhs(); rhs = n.rhs(); }
+    void operator()(const Iff &n)   { lhs = n.lhs(); rhs = n.rhs(); }
 
-    void operator()(const Var &) {}
-    void operator()(const Not &) {}
+    void operator()(const Not &n) { child = n.child(); }
+    void operator()(const Var &v) { value = v.value(); }
 };
 
+inline ValueGetter Expr::getValues() const {
+    ValueGetter g;
+    visit(g, *this);
+    return g;
+}
+
+inline bool Expr::contains(const Var &var) const {
+    auto g = getValues();
+    if (g.value) {
+        return g.value == var.value();
+    }
+    if (g.child) {
+        return g.child.value->containes(var);
+    }
+    return false;
+}
 
 //////////////////////////////////////////
 /// FUNCITONS

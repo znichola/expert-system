@@ -18,11 +18,12 @@ struct Rule {
     Expr expr;
     int line_number = -1;
     int index = -1;
-
     const std::string comment;
 
     Rule() = delete;
+
     explicit Rule(const Expr &expr) : expr(expr) {};
+
     Rule(const Expr &expr, int line_number, std::string comment) 
         : expr(expr), line_number(line_number), comment(comment) {}
 
@@ -48,7 +49,7 @@ struct Fact {
     const std::string comment;
 
     // the rules used for the deduction, if empy it's a base truth
-    std::vector<size_t> reasoning; 
+    std::vector<int> reasoning;
 
     // no no-value construction, no invalid fact states
     Fact() = delete;

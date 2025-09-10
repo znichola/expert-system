@@ -1,6 +1,7 @@
+#ifndef SOLVER_HPP
+# define SOLVER_HPP
+
 #include <cstddef>
 #include <vector>
 
-#include "expert-system.hpp"
-
-
+#endif /* SOLVER_HPP */

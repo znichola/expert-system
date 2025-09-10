@@ -21,7 +21,11 @@ Foo solve(
     // Find rule that solved for this value
     for (auto const &r : rules) {
         std::cout << r << std::endl;
-        
+
+        auto e = r.expr.getValues();
+
+        std::cout << "Expr:" << r.expr << std::endl;
+        //return {}; // this query is solved, plus the new facts list
     }
 
 

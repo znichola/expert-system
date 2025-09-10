@@ -31,7 +31,7 @@ bool Expr::isValidRule() const {
     }
 
     // check rhs is a "simple expression" just a value or an "and", "or", "xor" 
-    BinaryGetter g; std::visit(g, *this);
+    ValueGetter g; std::visit(g, *this);
     if (g.rhs) {
         return g.rhs.value().isSimpleExpr();
     }
