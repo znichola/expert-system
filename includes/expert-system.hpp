@@ -8,7 +8,7 @@
 # include <sstream>
 # include <string>
 # include <stdexcept>
-
+# include <unordered_map>
 
 # include "expression.hpp"
 
@@ -24,7 +24,7 @@ struct Token {
 
 // parseRules returns a vector of Rules
 struct Rule {
-    Expr expr;
+    const Expr expr;
     int line_number = -1;
     int index = -1;
     std::string comment;
@@ -34,13 +34,12 @@ struct Rule {
 
     explicit Rule(const Expr &expr) : expr(expr), id(expr.toString()) {};
 
-    Rule(const Expr &expr, int line_number, std::string comment) 
+    Rule(const Expr &expr, int line_number, std::string comment)
         : expr(expr), line_number(line_number),
         comment(comment), id(expr.toString()) {}
 
     std::string toString() const {
-        return ("Rule #" + std::to_string(line_number) 
-                + "  " + std::visit(Printer{}, expr));
+        return std::visit(Printer{}, expr);
     }
 };
 
@@ -111,6 +110,36 @@ inline std::ostream& operator<<(std::ostream& os, const Query& q) {
     return os << q.toString();
 }
 
+
+//////////////////////////////////////////////
+// NODE STORE 
+//
+// Store for all nodes of the graph, the key is .id field
+// of both structs, it's a hashMap so elements are unique
+
+
+struct Digraph {
+    using FactsMap = std::unordered_map<char, Fact>;
+    using RulesMap = std::unordered_map<std::string, Rule>;
+
+    FactsMap facts;
+    RulesMap rules;
+
+    bool addFact(const Fact &fact);
+
+    // add rule implicitly will also add relevant facts
+    bool addRule(const Rule &rule);
+
+    std::string toString() const;
+
+    std::vector<char> trueFacts() const;
+
+    std::string generateDotFile() const;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
+    return os << g.toString();
+}
 
 /* solver.cpp */
 struct Foo {};

@@ -9,17 +9,33 @@ using std::cout, std::cerr, std::endl;
 
 void testExprValidation();
 void testExprContaines();
+void testDigraph();
 
 void testSocratiesRuleSet();
 
 int main() {
-
-    cout << "Test foo" << endl;
+    cout << "DS" << endl;
 
     testExprValidation();
     testExprContaines();
+    testDigraph();
 
     testSocratiesRuleSet();
+}
+
+
+void testDigraph() {
+    cout << "Digraph struct" << endl;
+
+    Digraph digraph;
+
+    auto f = Fact('A', Fact::State::True);
+    auto r = Rule(Imply(And(Var('A'), Xor(Var('B'), Var('C'))), Var('R')));
+
+    digraph.addFact(f);
+    digraph.addRule(r);
+
+    cout << digraph << endl;
 }
 
 
