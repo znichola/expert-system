@@ -9,6 +9,7 @@
 
 // tokenizer returns a vector of Tokens
 struct Token {
+    std::vector<std::pair<std::string, size_t>> token_list;
     // whatever the token needs
 };
 
@@ -105,5 +106,8 @@ struct Foo {};
 Foo solve(const std::vector<Rule> &rules,
         const std::vector<Fact> &facts,
         const Query &query);
+
+/* tokenize.cpp */
+Token tokenizer(std::string input);
 
 #endif /* EXPERT_SYSTEM_HPP */
