@@ -98,7 +98,8 @@ struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
     bool isValidRule() const;
     bool isSimpleExpr() const;
     ValueGetter getValues() const;
-    bool contains(const Var &var) const;
+    bool containes(const Var &var) const;
+    std::string toString() const;
 };
 
 using std::visit;
@@ -123,6 +124,10 @@ struct Printer {
 inline std::ostream& operator<<(std::ostream& os, const Expr& e) {
     os << visit(Printer{}, e);
     return os;
+}
+
+inline std::string Expr::toString() const {
+    return visit(Printer{}, *this);
 }
 
 struct PrinterFormalLogic {
@@ -182,13 +187,21 @@ inline ValueGetter Expr::getValues() const {
     return g;
 }
 
-inline bool Expr::contains(const Var &var) const {
+# include <iostream>
+
+inline bool Expr::containes(const Var &var) const {
     auto g = getValues();
     if (g.value) {
         return g.value == var.value();
     }
-    if (g.child) {
-       // return g.child.value->containes(var);
+    if (g.child && g.child.value().containes(var)) {
+        return true;
+    }
+    if (g.lhs && g.lhs.value().containes(var)) {
+        return true;
+    }
+    if (g.rhs && g.rhs.value().containes(var)) {
+        return true;
     }
     return false;
 }

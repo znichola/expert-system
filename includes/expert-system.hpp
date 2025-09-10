@@ -28,13 +28,15 @@ struct Rule {
     int line_number = -1;
     int index = -1;
     std::string comment;
+    const std::string id;
 
     Rule() = delete;
 
-    explicit Rule(const Expr &expr) : expr(expr) {};
+    explicit Rule(const Expr &expr) : expr(expr), id(expr.toString()) {};
 
     Rule(const Expr &expr, int line_number, std::string comment) 
-        : expr(expr), line_number(line_number), comment(comment) {}
+        : expr(expr), line_number(line_number),
+        comment(comment), id(expr.toString()) {}
 
     std::string toString() const {
         return ("Rule #" + std::to_string(line_number) 
@@ -56,6 +58,7 @@ struct Fact {
     State state = State::Undetermined;
     const int line_number = -1;
     std::string comment;
+    const char id;
 
     // the rules used for the deduction, if empy it's a base truth
     std::vector<int> reasoning;
@@ -64,12 +67,12 @@ struct Fact {
     Fact() = delete;
 
     // Construct a deduced facts, it has no position or comment 
-    Fact(char label, State state) : label(label), state(state) {}
+    Fact(char label, State state) : label(label), state(state), id(label) {}
 
     // Construct a fact from inpupt data, with a comment and line number
     Fact(char label, State state, int line_number, const std::string &comment)
-        : label(label), state(state), line_number(line_number), comment(comment)
-        {}
+        : label(label), state(state), line_number(line_number),
+            comment(comment), id(label) {}
 
     std::string toString() const {
         return std::string(1, label) + " is " + (
