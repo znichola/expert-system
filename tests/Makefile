@@ -1,7 +1,7 @@
 CC		= clang++
 CFLAGS	= -Wall -Wextra
 CFLAGS	+= -Werror
-CFLAGS	+= -std=c++17 #-pedantic
+CFLAGS	+= -std=c++20 #-pedantic
 
 ifdef DEBUG
 CFLAGS	+= -g3 -fsanitize=address

@@ -3,7 +3,7 @@ NAME	= expert-system
 CC		= clang++
 CFLAGS	= -Wall -Wextra
 CFLAGS	+= -Werror
-CFLAGS	+= -std=c++17 #-pedantic
+CFLAGS	+= -std=c++20 #-pedantic
 
 ifdef DEBUG
 CFLAGS	+= -g3 -fsanitize=address
@@ -17,7 +17,7 @@ LEAKS_CHECK = valgrind
 
 EXAMPLE_FILE = example_file.txt
 
-FILES	= parser evaluator token
+FILES	= parser evaluator token solver
 
 MAIN_SRC	= srcs/main.cpp
 MAIN_OBJ	= objs/main.o
