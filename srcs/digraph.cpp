@@ -21,6 +21,14 @@ bool Digraph::addFact(const Fact &fact) {
     auto res = facts.insert({fact.id, fact});
     std::cout << "Inserted: " << res.second << std::endl;
 
+    // Ensure the fact is merged with existing facts
+    // If state is equal, add it
+    // propmote undetermined state to true or false
+    // 
+    // If True / False conficlt, throw error
+    //
+    // if True but new is unetermined, then still add it
+
     return false;
 }
 
@@ -29,13 +37,20 @@ bool Digraph::addRule(const Rule &rule) {
     auto res = rules.insert({rule.id, rule});
     std::cout << "Inserted: " << res.second << std::endl;
 
+    auto id = rule.id;
 
-    // Get facts from lhs
-    //   add the currnt rule to the links for these facts
+    auto factLabels = rule.expr.getAllFacts();
+    for (auto const &fl : factLabels) {
+        addFact(Fact(fl, Fact::State::Undetermined));
+    }
 
-    // Get facts form rhs
-    //   add these facts to fact list, and this rules deductions
+    // Get only facts from lhs
+    //   add to the consquent_facts
 
+    // Get only facts form rhs
+    //   add to the antecedent_facts
+
+    // If duplicate rule throw error, maybe? could also just ignore the dupe
 
     return false;
 }

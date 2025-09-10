@@ -6,6 +6,9 @@
 # include <variant>
 # include <vector>
 # include <optional>
+# include <iostream>
+
+# include "vector_helper.hpp"
 
 /*
  * The funcamental issue with this shit is :
@@ -99,6 +102,7 @@ struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
     bool isSimpleExpr() const;
     ValueGetter getValues() const;
     bool containes(const Var &var) const;
+    std::vector<char> getAllFacts() const;
     std::string toString() const;
 };
 
@@ -181,13 +185,13 @@ struct ValueGetter {
     void operator()(const Var &v) { value = v.value(); }
 };
 
+
 inline ValueGetter Expr::getValues() const {
     ValueGetter g;
     visit(g, *this);
     return g;
 }
 
-# include <iostream>
 
 inline bool Expr::containes(const Var &var) const {
     auto g = getValues();
@@ -205,6 +209,25 @@ inline bool Expr::containes(const Var &var) const {
     }
     return false;
 }
+
+
+inline std::vector<char> Expr::getAllFacts() const {
+    auto g = getValues();
+
+    if (g.value) {
+        return {g.value.value()};
+    }
+    if (g.child) {
+        return g.child.value().getAllFacts();
+    }
+    if (g.lhs && g.rhs) {
+        return g.lhs.value().getAllFacts() + g.rhs.value().getAllFacts();
+    }
+
+    std::cerr << "ERROR | an expression should always have facts!";
+    return {};
+}
+
 
 //////////////////////////////////////////
 /// FUNCITONS

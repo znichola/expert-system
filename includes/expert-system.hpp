@@ -30,6 +30,12 @@ struct Rule {
     std::string comment;
     const std::string id;
 
+    // id of facts that are in the antecedent (premis) of the rule
+    std::vector<std::string> antecedent_facts;
+
+    // id of facts that are in the consequent (conclusion) of the rule
+    std::vector<std::string> consequest_facts;
+
     Rule() = delete;
 
     explicit Rule(const Expr &expr) : expr(expr), id(expr.toString()) {};
@@ -59,8 +65,11 @@ struct Fact {
     std::string comment;
     const char id;
 
-    // the rules used for the deduction, if empy it's a base truth
-    std::vector<int> reasoning;
+    // ids of the rules this fact appears antecedent (premis)
+    std::vector<std::string> antecedent_rules;
+
+    // ids of the rules this fact appears consequest (conclusion)
+    std::vector<std::string> consequest_rules;
 
     // no no-value construction, no invalid fact states
     Fact() = delete;
@@ -131,9 +140,7 @@ struct Digraph {
     bool addRule(const Rule &rule);
 
     std::string toString() const;
-
     std::vector<char> trueFacts() const;
-
     std::string generateDotFile() const;
 };
 
