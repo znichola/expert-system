@@ -35,70 +35,70 @@ private:
 
 
 struct Not {
-    explicit Not(Expr c);
+    explicit Not(const Expr &c);
     Not() = delete;
     Expr child() const;
-    void changeChild(Expr n);
+    void replaceChild(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct And {
-    explicit And(Expr l, Expr r);
+    explicit And(const Expr &l, const Expr &r);
     And() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void changeLhs(Expr n);
-    void changeRhs(Expr n);
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct Or {
-    explicit Or(Expr l, Expr r);
+    explicit Or(const Expr &l, const Expr &r);
     Or() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void changeLhs(Expr n);
-    void changeRhs(Expr n);
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct Xor {
-    explicit Xor(Expr l, Expr r);
+    explicit Xor(const Expr &l, const Expr &r);
     Xor() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void changeLhs(Expr n);
-    void changeRhs(Expr n);
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct Imply {
-    explicit Imply(Expr l, Expr r);
+    explicit Imply(const Expr &l, const Expr &r);
     Imply() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void changeLhs(Expr n);
-    void changeRhs(Expr n);
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct Iff {
-    explicit Iff(Expr l, Expr r);
+    explicit Iff(const Expr &l, const Expr &r);
     Iff() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void changeLhs(Expr n);
-    void changeRhs(Expr n);
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };

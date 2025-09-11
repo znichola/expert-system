@@ -5,22 +5,37 @@
 #include "expression.hpp"
 
   Var::Var  (char v) : _v(v) {}
-  Not::Not  (const Expr c) : _v{std::move(c)} {}
-  And::And  (const Expr l, const Expr r) : _v{l, r} {}
-   Or::Or   (const Expr l, const Expr r) : _v{l, r} {}
-  Xor::Xor  (const Expr l, const Expr r) : _v{l, r} {}
-Imply::Imply(const Expr l, const Expr r) : _v{l, r} {}
-  Iff::Iff  (const Expr l, const Expr r) : _v{l, r} {}
+  Not::Not  (const Expr &c) : _v{c} {}
+  And::And  (const Expr &l, const Expr &r) : _v{l, r} {}
+   Or::Or   (const Expr &l, const Expr &r) : _v{l, r} {}
+  Xor::Xor  (const Expr &l, const Expr &r) : _v{l, r} {}
+Imply::Imply(const Expr &l, const Expr &r) : _v{l, r} {}
+  Iff::Iff  (const Expr &l, const Expr &r) : _v{l, r} {}
 
-char Var::value() const { return _v; }
-Expr Not::child() const { return _v[0]; }
-Expr And::lhs()   const { return _v[0]; } Expr And::rhs()   const { return _v[1]; }
-Expr Or::lhs()    const { return _v[0]; } Expr Or::rhs()    const { return _v[1]; }
-Expr Xor::lhs()   const { return _v[0]; } Expr Xor::rhs()   const { return _v[1]; }
-Expr Imply::lhs() const { return _v[0]; } Expr Imply::rhs() const { return _v[1]; }
-Expr Iff::lhs()   const { return _v[0]; } Expr Iff::rhs()   const { return _v[1]; }
+char   Var::value() const { return _v; }
+Expr   Not::child() const { return _v[0]; }
+Expr   And::lhs()   const { return _v[0]; } Expr And::rhs()   const { return _v[1]; }
+Expr    Or::lhs()   const { return _v[0]; } Expr Or::rhs()    const { return _v[1]; }
+Expr   Xor::lhs()   const { return _v[0]; } Expr Xor::rhs()   const { return _v[1]; }
+Expr Imply::lhs()   const { return _v[0]; } Expr Imply::rhs() const { return _v[1]; }
+Expr   Iff::lhs()   const { return _v[0]; } Expr Iff::rhs()   const { return _v[1]; }
+
+void   Not::replaceChild(const Expr &n) {_v[0] = n; }
+
+void   And::replaceLhs(const Expr &n) {_v[0] = n; }
+void    Or::replaceLhs(const Expr &n) {_v[0] = n; }
+void   Xor::replaceLhs(const Expr &n) {_v[0] = n; }
+void Imply::replaceLhs(const Expr &n) {_v[0] = n; }
+void   Iff::replaceLhs(const Expr &n) {_v[0] = n; }
+
+void   And::replaceRhs(const Expr &n) {_v[1] = n; }
+void    Or::replaceRhs(const Expr &n) {_v[1] = n; }
+void   Xor::replaceRhs(const Expr &n) {_v[1] = n; }
+void Imply::replaceRhs(const Expr &n) {_v[1] = n; }
+void   Iff::replaceRhs(const Expr &n) {_v[1] = n; }
 
 # include <iostream>
+
 
 bool Expr::isValidRule() const {
 
