@@ -17,7 +17,22 @@ using std::vector;
 
 // tokenizer returns a vector of Tokens
 struct Token {
-    std::vector<std::pair<std::string, size_t>> token_list;
+    enum class Type {
+        Variable,  // A B C ...
+        Operator,  // <=> => + | & ^ !
+        Fact,      // =
+        Query,     // ?
+        Parenthese,// ( )
+        Comment,   // # to end of line
+        NewLine,   // \n
+    };
+    string  token_list;
+    size_t  line_number = 0;
+    Type    type;
+
+    Token() = delete;
+    Token(const string &token_list, size_t line_number, Type type)
+        : token_list(token_list), line_number(line_number), type(type) {}
     // whatever the token needs
 };
 
@@ -155,11 +170,11 @@ Foo solve(const std::vector<Rule> &rules,
         const Query &query);
 
 /* tokenize.cpp */
-Token tokenizer(std::string input);
+vector<Token> tokenizer(string input);
 
 /* parser.cpp */
-std::vector<Fact> parseFacts(const Token &input);
-std::vector<Rule> parseRules(const Token &input);
-std::vector<Query> parseQueries(const Token &input);
+std::vector<Fact> parseFacts(const vector<Token> input);
+std::vector<Rule> parseRules(const vector<Token> input);
+std::vector<Query> parseQueries(const vector<Token> input);
 
 #endif /* EXPERT_SYSTEM_HPP */

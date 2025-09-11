@@ -75,7 +75,7 @@ int main(int argc, char ** argv) {
     }
     // printf("Input:\n%s\n", input.c_str());
     try {
-        Token tokens = tokenizer(input);
+        vector<Token> tokens = tokenizer(input);
         vector<Fact> facts = parseFacts(tokens);
         // for (const auto &t : tokens.token_list) {
         //     std::cout << "[" << t.second << "] '" << t.first << "'" << std::endl;
