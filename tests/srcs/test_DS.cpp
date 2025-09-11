@@ -11,6 +11,7 @@ void testExprValidation();
 void testExprContaines();
 void testExprReplacment();
 void testDigraph();
+void testDigraphViz();
 
 void testSocratiesRuleSet();
 
@@ -26,8 +27,23 @@ int main() {
     testExprContaines();
     testExprReplacment();
     testDigraph();
+    testDigraphViz();
 
     testSocratiesRuleSet();
+}
+
+
+void testDigraphViz() {
+    Digraph digraph;
+
+    auto f = Fact('A', Fact::State::True);
+    auto r = Rule(Imply(And(Var('A'), Xor(Var('B'), Var('C'))), Var('R')));
+
+    digraph.addFact(f);
+    digraph.addRule(r);
+    digraph.addRule(Rule(Imply(Var('J'), And(Var('A'), Var('C')))));
+
+    cout  << endl << digraph.toDot() << endl;
 }
 
 

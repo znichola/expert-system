@@ -47,9 +47,10 @@ struct Rule {
 
     // id of facts that are in the antecedent (premis) of the rule
     std::vector<std::string> antecedent_facts;
+    // TODO change this to unorderd_set!
 
     // id of facts that are in the consequent (conclusion) of the rule
-    std::vector<std::string> consequest_facts;
+    std::vector<std::string> consequent_facts;
 
     Rule() = delete;
 
@@ -83,8 +84,8 @@ struct Fact {
     // ids of the rules this fact appears antecedent (premis)
     std::vector<std::string> antecedent_rules;
 
-    // ids of the rules this fact appears consequest (conclusion)
-    std::vector<std::string> consequest_rules;
+    // ids of the rules this fact appears consequent (conclusion)
+    std::vector<std::string> consequent_rules;
 
     // no no-value construction, no invalid fact states
     Fact() = delete;
@@ -155,6 +156,7 @@ struct Digraph {
     bool addRule(const Rule &rule);
 
     std::string toString() const;
+    std::string toDot() const;
     std::vector<char> trueFacts() const;
     std::string generateDotFile() const;
 

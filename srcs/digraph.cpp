@@ -1,5 +1,6 @@
 #include "expert-system.hpp"
 
+
 std::string Digraph::toString() const {
     std::string res = "=== Digraph State ===\n";
 
@@ -17,9 +18,60 @@ std::string Digraph::toString() const {
 }
 
 
+std::string Digraph::toDot() const {
+    std::stringstream ss;
+
+    ss << "strict digraph {\n";
+
+    for (const auto &kv : facts) {
+        auto fact = kv.second;
+
+        if (fact.consequent_rules.size() == 0) {
+            ss << "  " << kv.first << "\n";
+            // continue statement here
+        }
+
+        for (const auto &r: fact.consequent_rules) {
+            ss << "  " << kv.first << " -> " << r << "\n";
+        }
+
+    }
+
+    for (const auto &kv : rules) {
+        auto rule = kv.second;
+
+        if (rule.antecedent_facts.size() == 0) {
+            ss << "  \"" << kv.first << "\"\n";
+        }
+
+        for (const auto &f: rule.antecedent_facts) {
+            ss << "  " << kv.first << " -> " << f << "\n";
+        }
+    }
+
+    ss << "}\n";
+    return ss.str();
+}
+
+
 bool Digraph::addFact(const Fact &fact) {
-    auto res = facts.insert({fact.id, fact});
-    std::cout << "Inserted: " << res.second << std::endl;
+    auto it = facts.find(fact.id);
+    if (it == facts.end()) {
+        (void)facts.insert({fact.id, fact});
+        return true;
+    }
+
+    Fact &existing = it->second;
+
+    if (fact.state == existing.state) {
+        existing.antecedent_rules 
+        return true;
+    }
+
+    if (fact.state == existing.state) {
+        return true;
+    }
+    //std::cout << "Inserted: " << res.second << std::endl;
 
     // Ensure the fact is merged with existing facts
     // If state is equal, add it
@@ -38,7 +90,8 @@ bool Digraph::addRule(const Rule &rule) {
     // Rule validation, before inserting
 
     auto res = rules.insert({rule.id, rule});
-    std::cout << "Inserted: " << res.second << std::endl;
+    //std::cout << "Inserted: " << res.second << std::endl;
+    (void)res;
 
     // With res check rule duplication
 
@@ -70,7 +123,7 @@ Fact::State Digraph::solveFor(const Query &query) {
     }
     Fact fact(f->second);
 
-    for (const auto &r : fact.consequest_rules) {
+    for (const auto &r : fact.consequent_rules) {
         (void)r;
         // r : solve this rule, if possible, see if this solves the fact
     }
