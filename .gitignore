@@ -1,5 +1,6 @@
 *a.out
 *.swp
+*.swo
 *.o
 *.tmp
 test_DS

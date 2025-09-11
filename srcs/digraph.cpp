@@ -61,3 +61,23 @@ bool Digraph::addRule(const Rule &rule) {
 }
 
 
+Fact::State Digraph::solveFor(const Query &query) {
+    auto f = facts.find(query.label);
+
+    if (f == facts.end()){
+        std::cout << "Fact not found, not possible!" << std::endl;
+        return Fact::State::Undetermined;
+    }
+    Fact fact(f->second);
+
+    for (const auto &r : fact.consequest_rules) {
+        (void)r;
+        // r : solve this rule, if possible, see if this solves the fact
+    }
+
+    return Fact::State::Undetermined;
+}
+
+
+
+

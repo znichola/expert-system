@@ -157,6 +157,8 @@ struct Digraph {
     std::string toString() const;
     std::vector<char> trueFacts() const;
     std::string generateDotFile() const;
+
+    Fact::State solveFor(const Query &query);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
