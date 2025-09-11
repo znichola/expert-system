@@ -28,18 +28,19 @@ std::string Digraph::toDot() const {
         auto fact = kv.second;
 
         if (fact.consequent_rules.size() == 0) {
-            //ss << "  " << kv.first << "\n";
+            ss << "  " << kv.first << "\n";
         } else for (const auto &r: fact.consequent_rules) {
-            //ss << "  " << kv.first << " -> \"" << r << "\"\n";
+            ss << "  " << kv.first << " -> \"" << r << "\"\n";
             //ss << "  \"" << r << "\" -> " << kv.first << "\n";
            (void)r;
         }
 
         if (fact.antecedent_rules.size() == 0) {
-            ss << "  " << kv.first << "\n";
+            //ss << "  " << kv.first << "\n";
         } else for (const auto &r: fact.antecedent_rules) {
-            ss << "  " << kv.first << " -> \"" << r << "\"\n";
+            //ss << "  " << kv.first << " -> \"" << r << "\"\n";
             //ss <<  " \"" << r << "\" -> " << kv.first << "\n";
+           (void)r;
         }
     }
     ss << "\n\n";
@@ -118,7 +119,7 @@ void Digraph::addRule(const Rule &rule) {
         for (auto const &fl : rhsLabels) {
             auto fact = Fact(fl, Fact::State::Undetermined);
             fact.consequent_rules.push_back(rule.id);
-            newRule.antecedent_facts.push_back(fact.id);
+            newRule.consequent_facts.push_back(fact.id);
             addFact(fact);
         }
 
@@ -126,13 +127,15 @@ void Digraph::addRule(const Rule &rule) {
         for (auto const &fl : lhsLabels) {
             auto fact = Fact(fl, Fact::State::Undetermined);
             fact.antecedent_rules.push_back(rule.id);
-            newRule.consequent_facts.push_back(fact.id);
+            newRule.antecedent_facts.push_back(fact.id);
             addFact(fact);
         }
         rules.insert({newRule.id, newRule});
     } else {
         throw std::runtime_error("Illegal state, rules must have lhs, rhs");
     }
+
+    // TODO : handel if-and-only-if which adds a second rule with terms flipped
     return;
 }
 
