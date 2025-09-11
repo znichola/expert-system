@@ -17,7 +17,7 @@ LEAKS_CHECK = valgrind
 
 EXAMPLE_FILE = example_file.txt
 
-FILES	= parser evaluator token solver
+FILES	= parser expression token solver digraph
 
 MAIN_SRC	= srcs/main.cpp
 MAIN_OBJ	= objs/main.o
@@ -41,8 +41,10 @@ $(NAME)	: $(OBJS) $(MAIN_OBJ)
 clean	:
 	-rm $(OBJS) $(MAIN_OBJ)
 
+LIBNAME = libES.a
+
 fclean	: clean
-	-rm $(NAME)
+	-rm $(NAME) $(LIBNAME)
 
 re	: fclean all
 
@@ -52,7 +54,6 @@ leaks : re
 run : all
 	$(LEAKS_CHECK) ./$(NAME) $(EXAMPLE_FILE)
 
-LIBNAME = libES.a
 
 # Rule to archive object files into a static library.
 # Useful for testing

@@ -6,6 +6,9 @@
 # include <variant>
 # include <vector>
 # include <optional>
+# include <iostream>
+
+# include "vector_helper.hpp"
 
 /*
  * The funcamental issue with this shit is :
@@ -32,78 +35,97 @@ private:
 
 
 struct Not {
-    explicit Not(Expr c);
+    explicit Not(const Expr &c);
     Not() = delete;
     Expr child() const;
+    void replaceChild(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct And {
-    explicit And(Expr l, Expr r);
+    explicit And(const Expr &l, const Expr &r);
     And() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct Or {
-    explicit Or(Expr l, Expr r);
+    explicit Or(const Expr &l, const Expr &r);
     Or() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct Xor {
-    explicit Xor(Expr l, Expr r);
+    explicit Xor(const Expr &l, const Expr &r);
     Xor() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct Imply {
-    explicit Imply(Expr l, Expr r);
+    explicit Imply(const Expr &l, const Expr &r);
     Imply() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
 
 struct Iff {
-    explicit Iff(Expr l, Expr r);
+    explicit Iff(const Expr &l, const Expr &r);
     Iff() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void replaceLhs(const Expr &n);
+    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
 
+
+struct Empty {};
+
+
 struct ValueGetter;
 
-struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
-    using std::variant<Var, Not, And, Or, Xor, Imply, Iff>::variant;
+struct Expr : std::variant<Empty, Var, Not, And, Or, Xor, Imply, Iff> {
+    using std::variant<Empty, Var, Not, And, Or, Xor, Imply, Iff>::variant;
     Expr() = delete; // want to remove the defualt no args constuctions
                      // it's a completly invalid state!
     bool isValidRule() const;
     bool isSimpleExpr() const;
     ValueGetter getValues() const;
-    bool contains(const Var &var) const;
+    bool containes(const Var &var) const;
+    std::vector<char> getAllFacts() const;
+    std::string toString() const;
 };
 
 using std::visit;
 
 struct Printer {
+    std::string operator()(const Empty &) const 
+        {return "#";}
     std::string operator()(const Var &v) const
         { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
@@ -125,7 +147,13 @@ inline std::ostream& operator<<(std::ostream& os, const Expr& e) {
     return os;
 }
 
+inline std::string Expr::toString() const {
+    return visit(Printer{}, *this);
+}
+
 struct PrinterFormalLogic {
+    std::string operator()(const Empty &) const 
+        {return "#";}
     std::string operator()(const Var &v) const
         { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
@@ -145,6 +173,8 @@ struct PrinterFormalLogic {
 
 // This is only half implemented
 struct PrinterExplenation {
+    std::string operator()(const Empty &) const 
+        {return "Empty Node";}
     std::string operator()(const Var &v) const
     { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
@@ -166,6 +196,7 @@ struct ValueGetter {
     std::optional<Expr> child, lhs, rhs;
     std::optional<char> value;
 
+    void operator()(const Empty&)   {}
     void operator()(const And &n)   { lhs = n.lhs(); rhs = n.rhs(); }
     void operator()(const Or &n)    { lhs = n.lhs(); rhs = n.rhs(); }
     void operator()(const Xor &n)   { lhs = n.lhs(); rhs = n.rhs(); }
@@ -176,22 +207,49 @@ struct ValueGetter {
     void operator()(const Var &v) { value = v.value(); }
 };
 
+
 inline ValueGetter Expr::getValues() const {
     ValueGetter g;
     visit(g, *this);
     return g;
 }
 
-inline bool Expr::contains(const Var &var) const {
+
+inline bool Expr::containes(const Var &var) const {
     auto g = getValues();
     if (g.value) {
         return g.value == var.value();
     }
-    if (g.child) {
-       // return g.child.value->containes(var);
+    if (g.child && g.child.value().containes(var)) {
+        return true;
+    }
+    if (g.lhs && g.lhs.value().containes(var)) {
+        return true;
+    }
+    if (g.rhs && g.rhs.value().containes(var)) {
+        return true;
     }
     return false;
 }
+
+
+inline std::vector<char> Expr::getAllFacts() const {
+    auto g = getValues();
+
+    if (g.value) {
+        return {g.value.value()};
+    }
+    if (g.child) {
+        return g.child.value().getAllFacts();
+    }
+    if (g.lhs && g.rhs) {
+        return g.lhs.value().getAllFacts() + g.rhs.value().getAllFacts();
+    }
+
+    std::cerr << "ERROR | an expression should always have facts!";
+    return {};
+}
+
 
 //////////////////////////////////////////
 /// FUNCITONS

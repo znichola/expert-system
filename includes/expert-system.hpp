@@ -8,7 +8,7 @@
 # include <sstream>
 # include <string>
 # include <stdexcept>
-
+# include <unordered_map>
 
 # include "expression.hpp"
 
@@ -24,21 +24,28 @@ struct Token {
 
 // parseRules returns a vector of Rules
 struct Rule {
-    Expr expr;
+    const Expr expr;
     int line_number = -1;
     int index = -1;
     std::string comment;
+    const std::string id;
+
+    // id of facts that are in the antecedent (premis) of the rule
+    std::vector<std::string> antecedent_facts;
+
+    // id of facts that are in the consequent (conclusion) of the rule
+    std::vector<std::string> consequest_facts;
 
     Rule() = delete;
 
-    explicit Rule(const Expr &expr) : expr(expr) {};
+    explicit Rule(const Expr &expr) : expr(expr), id(expr.toString()) {};
 
-    Rule(const Expr &expr, int line_number, std::string comment) 
-        : expr(expr), line_number(line_number), comment(comment) {}
+    Rule(const Expr &expr, int line_number, std::string comment)
+        : expr(expr), line_number(line_number),
+        comment(comment), id(expr.toString()) {}
 
     std::string toString() const {
-        return ("Rule #" + std::to_string(line_number) 
-                + "  " + std::visit(Printer{}, expr));
+        return std::visit(Printer{}, expr);
     }
 };
 
@@ -56,20 +63,24 @@ struct Fact {
     State state = State::Undetermined;
     const int line_number = -1;
     std::string comment;
+    const char id;
 
-    // the rules used for the deduction, if empy it's a base truth
-    std::vector<int> reasoning;
+    // ids of the rules this fact appears antecedent (premis)
+    std::vector<std::string> antecedent_rules;
+
+    // ids of the rules this fact appears consequest (conclusion)
+    std::vector<std::string> consequest_rules;
 
     // no no-value construction, no invalid fact states
     Fact() = delete;
 
     // Construct a deduced facts, it has no position or comment 
-    Fact(char label, State state) : label(label), state(state) {}
+    Fact(char label, State state) : label(label), state(state), id(label) {}
 
     // Construct a fact from inpupt data, with a comment and line number
     Fact(char label, State state, int line_number, const std::string &comment)
-        : label(label), state(state), line_number(line_number), comment(comment)
-        {}
+        : label(label), state(state), line_number(line_number),
+            comment(comment), id(label) {}
 
     std::string toString() const {
         return std::string(1, label) + " is " + (
@@ -108,6 +119,34 @@ inline std::ostream& operator<<(std::ostream& os, const Query& q) {
     return os << q.toString();
 }
 
+
+//////////////////////////////////////////////
+// NODE STORE 
+//
+// Store for all nodes of the graph, the key is .id field
+// of both structs, it's a hashMap so elements are unique
+
+
+struct Digraph {
+    using FactsMap = std::unordered_map<char, Fact>;
+    using RulesMap = std::unordered_map<std::string, Rule>;
+
+    FactsMap facts;
+    RulesMap rules;
+
+    bool addFact(const Fact &fact);
+
+    // add rule implicitly will also add relevant facts
+    bool addRule(const Rule &rule);
+
+    std::string toString() const;
+    std::vector<char> trueFacts() const;
+    std::string generateDotFile() const;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
+    return os << g.toString();
+}
 
 /* solver.cpp */
 struct Foo {};
