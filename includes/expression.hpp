@@ -38,7 +38,6 @@ struct Not {
     explicit Not(const Expr &c);
     Not() = delete;
     Expr child() const;
-    void replaceChild(const Expr &n);
 private:
     ExprBoxed _v;
 };
@@ -49,8 +48,6 @@ struct And {
     And() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void replaceLhs(const Expr &n);
-    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
@@ -61,8 +58,6 @@ struct Or {
     Or() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void replaceLhs(const Expr &n);
-    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
@@ -73,8 +68,6 @@ struct Xor {
     Xor() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void replaceLhs(const Expr &n);
-    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
@@ -85,8 +78,6 @@ struct Imply {
     Imply() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void replaceLhs(const Expr &n);
-    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
@@ -97,8 +88,6 @@ struct Iff {
     Iff() = delete;
     Expr lhs() const;
     Expr rhs() const;
-    void replaceLhs(const Expr &n);
-    void replaceRhs(const Expr &n);
 private:
     ExprBoxed _v;
 };
@@ -143,7 +132,7 @@ struct Printer {
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Expr& e) {
-    os << visit(Printer{}, e);
+    os << std::visit(Printer{}, e);
     return os;
 }
 
@@ -195,8 +184,9 @@ struct PrinterExplenation {
 struct ValueGetter {
     std::optional<Expr> child, lhs, rhs;
     std::optional<char> value;
+    bool isVariable, isUnaryOp, isBinaryOp, isEmpty = false;
 
-    void operator()(const Empty&)   {}
+    void operator()(const Empty&)   { isEmpty = true; }
     void operator()(const And &n)   { lhs = n.lhs(); rhs = n.rhs(); }
     void operator()(const Or &n)    { lhs = n.lhs(); rhs = n.rhs(); }
     void operator()(const Xor &n)   { lhs = n.lhs(); rhs = n.rhs(); }

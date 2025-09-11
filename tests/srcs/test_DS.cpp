@@ -9,6 +9,7 @@ using std::cout, std::cerr, std::endl;
 
 void testExprValidation();
 void testExprContaines();
+void testExprReplacment();
 void testDigraph();
 
 void testSocratiesRuleSet();
@@ -23,6 +24,7 @@ int main() {
 
     testExprValidation();
     testExprContaines();
+    testExprReplacment();
     testDigraph();
 
     testSocratiesRuleSet();
@@ -42,6 +44,22 @@ void testDigraph() {
 
     cout << digraph << endl;
 }
+
+
+void testExprReplacment() {
+    cout << "Expr node replacment" << endl;
+
+    Expr e = And(Var('A'), Var('B'));
+    auto e2 = Xor(Var('C'), Var('A'));
+    auto e3 = Not(Var('F'));
+
+    auto g = e.getValues();
+
+
+
+    cout << endl;
+}
+
 
 
 void testSocratiesRuleSet() {

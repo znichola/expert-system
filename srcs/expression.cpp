@@ -20,20 +20,6 @@ Expr   Xor::lhs()   const { return _v[0]; } Expr Xor::rhs()   const { return _v[
 Expr Imply::lhs()   const { return _v[0]; } Expr Imply::rhs() const { return _v[1]; }
 Expr   Iff::lhs()   const { return _v[0]; } Expr Iff::rhs()   const { return _v[1]; }
 
-void   Not::replaceChild(const Expr &n) {_v[0] = n; }
-
-void   And::replaceLhs(const Expr &n) {_v[0] = n; }
-void    Or::replaceLhs(const Expr &n) {_v[0] = n; }
-void   Xor::replaceLhs(const Expr &n) {_v[0] = n; }
-void Imply::replaceLhs(const Expr &n) {_v[0] = n; }
-void   Iff::replaceLhs(const Expr &n) {_v[0] = n; }
-
-void   And::replaceRhs(const Expr &n) {_v[1] = n; }
-void    Or::replaceRhs(const Expr &n) {_v[1] = n; }
-void   Xor::replaceRhs(const Expr &n) {_v[1] = n; }
-void Imply::replaceRhs(const Expr &n) {_v[1] = n; }
-void   Iff::replaceRhs(const Expr &n) {_v[1] = n; }
-
 # include <iostream>
 
 
