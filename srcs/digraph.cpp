@@ -1,5 +1,6 @@
-#include "expert-system.hpp"
+#include <set>
 
+#include "expert-system.hpp"
 
 std::string Digraph::toString() const {
     std::string res = "=== Digraph State ===\n";
@@ -27,25 +28,39 @@ std::string Digraph::toDot() const {
         auto fact = kv.second;
 
         if (fact.consequent_rules.size() == 0) {
+            //ss << "  " << kv.first << "\n";
+        } else for (const auto &r: fact.consequent_rules) {
+            //ss << "  " << kv.first << " -> \"" << r << "\"\n";
+            //ss << "  \"" << r << "\" -> " << kv.first << "\n";
+           (void)r;
+        }
+
+        if (fact.antecedent_rules.size() == 0) {
             ss << "  " << kv.first << "\n";
-            // continue statement here
+        } else for (const auto &r: fact.antecedent_rules) {
+            ss << "  " << kv.first << " -> \"" << r << "\"\n";
+            //ss <<  " \"" << r << "\" -> " << kv.first << "\n";
         }
-
-        for (const auto &r: fact.consequent_rules) {
-            ss << "  " << kv.first << " -> " << r << "\n";
-        }
-
     }
+    ss << "\n\n";
 
     for (const auto &kv : rules) {
         auto rule = kv.second;
 
-        if (rule.antecedent_facts.size() == 0) {
-            ss << "  \"" << kv.first << "\"\n";
+        if (rule.consequent_facts.size() == 0) {
+            //ss << "  \"" << kv.first << "\"\n";
+        } else for (const auto &f: rule.consequent_facts) {
+            //ss << "  \"" << kv.first << "\" -> " << f << "\n";
+            //ss << "  " << f << " -> \"" << kv.first << "\"\n";
+            (void)f;
         }
 
-        for (const auto &f: rule.antecedent_facts) {
-            ss << "  " << kv.first << " -> " << f << "\n";
+        if (rule.antecedent_facts.size() == 0) {
+            ss << "  \"" << kv.first << "\"\n";
+        } else for (const auto &f: rule.antecedent_facts) {
+            ss << "  \"" << kv.first << "\" -> " << f << "\n";
+            //ss << "  " << f << " -> \"" << kv.first << "\"\n";
+            (void)f;
         }
     }
 
@@ -54,63 +69,71 @@ std::string Digraph::toDot() const {
 }
 
 
-bool Digraph::addFact(const Fact &fact) {
+void Digraph::addFact(const Fact &fact) {
     auto it = facts.find(fact.id);
     if (it == facts.end()) {
         (void)facts.insert({fact.id, fact});
-        return true;
+        return;
     }
 
     Fact &existing = it->second;
 
-    if (fact.state == existing.state) {
-        existing.antecedent_rules 
-        return true;
+    std::set<Fact::State> s = {existing.state, fact.state};
+
+    if (s.size() == 1) {
+        ; // used to filter for following cases
+    } else if (s.contains(Fact::State::True)
+            && s.contains(Fact::State::False)) {
+        throw std::runtime_error("Conflicting facts");
+    } else if (s.contains(Fact::State::True)) {
+        existing.state = Fact::State::True;
+    } else {
+        existing.state = Fact::State::False;
     }
 
-    if (fact.state == existing.state) {
-        return true;
-    }
-    //std::cout << "Inserted: " << res.second << std::endl;
-
-    // Ensure the fact is merged with existing facts
-    // If state is equal, add it
-    // propmote undetermined state to true or false
-    // 
-    // If True / False conficlt, throw error
-    //
-    // if True but new is unetermined, then still add it
-
-    return false;
+    existing.antecedent_rules = (
+        existing.antecedent_rules + fact.antecedent_rules);
+    existing.consequent_rules = (
+        existing.consequent_rules + fact.consequent_rules);
+    return;
 }
 
 
-bool Digraph::addRule(const Rule &rule) {
-
-    // Rule validation, before inserting
-
-    auto res = rules.insert({rule.id, rule});
-    //std::cout << "Inserted: " << res.second << std::endl;
-    (void)res;
-
-    // With res check rule duplication
-
-    auto id = rule.id;
-
-    auto factLabels = rule.expr.getAllFacts();
-    for (auto const &fl : factLabels) {
-        addFact(Fact(fl, Fact::State::Undetermined));
+void Digraph::addRule(const Rule &rule) {
+    auto it = rules.find(rule.id);
+    if (it != rules.end()) {
+        throw std::runtime_error("Duplicate rule");
     }
 
-    // Get only facts from lhs
-    //   add to the consquent_facts
+    if (!rule.expr.isValidRule()) {
+        throw std::runtime_error("Invalid rule");
+    }
 
-    // Get only facts form rhs
-    //   add to the antecedent_facts
+    auto g = rule.expr.getValues();
 
-    // If duplicate rule throw error, maybe? could also just ignore the dupe
+    if(g.lhs && g.rhs) {
+        Rule newRule = rule;
 
-    return false;
+        auto rhsLabels = g.rhs->getAllFacts();
+        for (auto const &fl : rhsLabels) {
+            auto fact = Fact(fl, Fact::State::Undetermined);
+            fact.consequent_rules.push_back(rule.id);
+            newRule.antecedent_facts.push_back(fact.id);
+            addFact(fact);
+        }
+
+        auto lhsLabels = g.lhs->getAllFacts();
+        for (auto const &fl : lhsLabels) {
+            auto fact = Fact(fl, Fact::State::Undetermined);
+            fact.antecedent_rules.push_back(rule.id);
+            newRule.consequent_facts.push_back(fact.id);
+            addFact(fact);
+        }
+        rules.insert({newRule.id, newRule});
+    } else {
+        throw std::runtime_error("Illegal state, rules must have lhs, rhs");
+    }
+    return;
 }
 
 

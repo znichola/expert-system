@@ -45,12 +45,12 @@ struct Rule {
     std::string comment;
     const std::string id;
 
-    // id of facts that are in the antecedent (premis) of the rule
-    std::vector<std::string> antecedent_facts;
+    // id of facts that are in the antecedent (premis) of the rule (lhs)
+    std::vector<char> antecedent_facts;
     // TODO change this to unorderd_set!
 
-    // id of facts that are in the consequent (conclusion) of the rule
-    std::vector<std::string> consequent_facts;
+    // id of facts that are in the consequent (conclusion) of the rule (rhs)
+    std::vector<char> consequent_facts;
 
     Rule() = delete;
 
@@ -81,10 +81,10 @@ struct Fact {
     std::string comment;
     const char id;
 
-    // ids of the rules this fact appears antecedent (premis)
+    // ids of the rules this fact appears antecedent (premis) (lhs)
     std::vector<std::string> antecedent_rules;
 
-    // ids of the rules this fact appears consequent (conclusion)
+    // ids of the rules this fact appears consequent (conclusion) (rhs)
     std::vector<std::string> consequent_rules;
 
     // no no-value construction, no invalid fact states
@@ -150,15 +150,14 @@ struct Digraph {
     FactsMap facts;
     RulesMap rules;
 
-    bool addFact(const Fact &fact);
+    void addFact(const Fact &fact);
 
     // add rule implicitly will also add relevant facts
-    bool addRule(const Rule &rule);
+    void addRule(const Rule &rule);
 
     std::string toString() const;
     std::string toDot() const;
     std::vector<char> trueFacts() const;
-    std::string generateDotFile() const;
 
     Fact::State solveFor(const Query &query);
 };
