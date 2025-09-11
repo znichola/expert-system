@@ -6,11 +6,11 @@
 
   Var::Var  (char v) : _v(v) {}
   Not::Not  (const Expr c) : _v{std::move(c)} {}
-  And::And  (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
-   Or::Or   (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
-  Xor::Xor  (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
-Imply::Imply(const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
-  Iff::Iff  (const Expr l, const Expr r) : _v{std::move(l), std::move(r)} {}
+  And::And  (const Expr l, const Expr r) : _v{l, r} {}
+   Or::Or   (const Expr l, const Expr r) : _v{l, r} {}
+  Xor::Xor  (const Expr l, const Expr r) : _v{l, r} {}
+Imply::Imply(const Expr l, const Expr r) : _v{l, r} {}
+  Iff::Iff  (const Expr l, const Expr r) : _v{l, r} {}
 
 char Var::value() const { return _v; }
 Expr Not::child() const { return _v[0]; }

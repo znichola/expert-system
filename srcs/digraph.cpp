@@ -34,8 +34,13 @@ bool Digraph::addFact(const Fact &fact) {
 
 
 bool Digraph::addRule(const Rule &rule) {
+
+    // Rule validation, before inserting
+
     auto res = rules.insert({rule.id, rule});
     std::cout << "Inserted: " << res.second << std::endl;
+
+    // With res check rule duplication
 
     auto id = rule.id;
 

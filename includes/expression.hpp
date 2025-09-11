@@ -38,6 +38,7 @@ struct Not {
     explicit Not(Expr c);
     Not() = delete;
     Expr child() const;
+    void changeChild(Expr n);
 private:
     ExprBoxed _v;
 };
@@ -48,6 +49,8 @@ struct And {
     And() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void changeLhs(Expr n);
+    void changeRhs(Expr n);
 private:
     ExprBoxed _v;
 };
@@ -58,6 +61,8 @@ struct Or {
     Or() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void changeLhs(Expr n);
+    void changeRhs(Expr n);
 private:
     ExprBoxed _v;
 };
@@ -68,6 +73,8 @@ struct Xor {
     Xor() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void changeLhs(Expr n);
+    void changeRhs(Expr n);
 private:
     ExprBoxed _v;
 };
@@ -78,6 +85,8 @@ struct Imply {
     Imply() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void changeLhs(Expr n);
+    void changeRhs(Expr n);
 private:
     ExprBoxed _v;
 };
@@ -88,14 +97,20 @@ struct Iff {
     Iff() = delete;
     Expr lhs() const;
     Expr rhs() const;
+    void changeLhs(Expr n);
+    void changeRhs(Expr n);
 private:
     ExprBoxed _v;
 };
 
+
+struct Empty {};
+
+
 struct ValueGetter;
 
-struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
-    using std::variant<Var, Not, And, Or, Xor, Imply, Iff>::variant;
+struct Expr : std::variant<Empty, Var, Not, And, Or, Xor, Imply, Iff> {
+    using std::variant<Empty, Var, Not, And, Or, Xor, Imply, Iff>::variant;
     Expr() = delete; // want to remove the defualt no args constuctions
                      // it's a completly invalid state!
     bool isValidRule() const;
@@ -109,6 +124,8 @@ struct Expr : std::variant<Var, Not, And, Or, Xor, Imply, Iff> {
 using std::visit;
 
 struct Printer {
+    std::string operator()(const Empty &) const 
+        {return "#";}
     std::string operator()(const Var &v) const
         { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
@@ -135,6 +152,8 @@ inline std::string Expr::toString() const {
 }
 
 struct PrinterFormalLogic {
+    std::string operator()(const Empty &) const 
+        {return "#";}
     std::string operator()(const Var &v) const
         { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
@@ -154,6 +173,8 @@ struct PrinterFormalLogic {
 
 // This is only half implemented
 struct PrinterExplenation {
+    std::string operator()(const Empty &) const 
+        {return "Empty Node";}
     std::string operator()(const Var &v) const
     { return std::string(1, v.value()); }
     std::string operator()(const Not &n) const
@@ -175,6 +196,7 @@ struct ValueGetter {
     std::optional<Expr> child, lhs, rhs;
     std::optional<char> value;
 
+    void operator()(const Empty&)   {}
     void operator()(const And &n)   { lhs = n.lhs(); rhs = n.rhs(); }
     void operator()(const Or &n)    { lhs = n.lhs(); rhs = n.rhs(); }
     void operator()(const Xor &n)   { lhs = n.lhs(); rhs = n.rhs(); }

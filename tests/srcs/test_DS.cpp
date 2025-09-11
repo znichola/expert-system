@@ -16,6 +16,11 @@ void testSocratiesRuleSet();
 int main() {
     cout << "DS" << endl;
 
+    auto foo = And(Var('A'), Var('B'));
+
+
+    cout << "YAYA" << endl;
+
     testExprValidation();
     testExprContaines();
     testDigraph();
@@ -100,6 +105,7 @@ void testExprValidation() {
     for (const auto &t : simpleExprValidation) {
         bool expected = t.first;
         const Expr &expr = t.second;
+
 
         bool result = expr.isValidRule();
         if (result == expected) {
