@@ -39,9 +39,45 @@ void testDigraphViz() {
     auto f = Fact('A', Fact::State::True);
     auto r = Rule(Imply(And(Var('A'), Xor(Var('B'), Var('C'))), Var('R')));
 
-    digraph.addFact(f);
-    digraph.addRule(r);
-    digraph.addRule(Rule(Imply(Var('J'), And(Var('A'), Var('C')))));
+     // Initial facts: A, B, G are true
+    digraph.addFact(Fact('A', Fact::State::True));
+    digraph.addFact(Fact('B', Fact::State::True));
+    digraph.addFact(Fact('G', Fact::State::True));
+
+    // Rules from the file
+
+    // C => E
+    digraph.addRule(Rule(Imply(Var('C'), Var('E'))));
+
+    // A + B + C => D
+    digraph.addRule(Rule(Imply(And(Var('A'), And(Var('B'), Var('C'))), Var('D'))));
+
+    // A | B => C
+    digraph.addRule(Rule(Imply(Or(Var('A'), Var('B')), Var('C'))));
+
+    // A + !B => F
+    digraph.addRule(Rule(Imply(And(Var('A'), Not(Var('B'))), Var('F'))));
+
+    // C | !G => H
+    digraph.addRule(Rule(Imply(Or(Var('C'), Not(Var('G'))), Var('H'))));
+
+    // V ^ W => X
+    digraph.addRule(Rule(Imply(Xor(Var('V'), Var('W')), Var('X'))));
+
+    // A + B => Y + Z
+    digraph.addRule(Rule(Imply(And(Var('A'), Var('B')), And(Var('Y'), Var('Z')))));
+
+    // C | D => X | V
+    digraph.addRule(Rule(Imply(Or(Var('C'), Var('D')), Or(Var('X'), Var('V')))));
+
+    // E + F => !V
+    digraph.addRule(Rule(Imply(And(Var('E'), Var('F')), Not(Var('V')))));
+
+    // A + B <=> C
+    digraph.addRule(Rule(Iff(And(Var('A'), Var('B')), Var('C'))));
+
+    // A + B <=> !C
+    digraph.addRule(Rule(Iff(And(Var('A'), Var('B')), Not(Var('C')))));
 
     cout  << endl << digraph.toDot() << endl;
 }
