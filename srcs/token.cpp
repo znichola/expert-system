@@ -9,7 +9,7 @@ using std::string;
 ** and returns a Token struct containing a list of tokens and their line numbers.
 ** It recognizes the following tokens:
 ** - Variables: single uppercase letters (A-Z)
-** - Operators: <=>, =>, +, |, &, ^, !
+** - Operators: <=>, =>, +, |, ^, !
 ** - Fact and Query: =, ?
 ** - Parentheses: (, )
 ** - Comments: starting with # and continuing to the end of the line
@@ -19,7 +19,7 @@ using std::string;
 
 vector<Token> tokenizer(string input)
 {
-    string  t_authorized[] = {"<=>", "=>","+","|","&","^","(",")","!","#","=", "?"};
+    string  t_authorized[] = {"<=>", "=>","+","|","^","(",")","!","#","=", "?"};
     vector<Token>   tokens;
     bool    find_token = false;
     size_t  line = 0;

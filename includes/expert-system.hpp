@@ -19,7 +19,7 @@ using std::vector;
 struct Token {
     enum class Type {
         Variable,  // A B C ...
-        Operator,  // <=> => + | & ^ !
+        Operator,  // <=> => + | ^ !
         Fact,      // =
         Query,     // ?
         Parenthese,// ( )
