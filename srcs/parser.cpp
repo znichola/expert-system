@@ -1,85 +1,47 @@
 #include <vector>
 #include <string>
+# include "parser.hpp"
 
 
 #include "expert-system.hpp"
 
-// Rule getNextVar(const vector<Token> &tokens, size_t &index, int line_number)
-// {
+std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
+    parseTokens(const vector<Token> &input) {
+    // take the list of tokens, split into lines then keep the comments to one side, and 
+    // using the Parser.parse()
+    if (input.empty())
+        return {};
+    vector<Rule> rules;
+    vector<Query> queries = parseQueries(input);
+    vector<Fact> facts = parseFacts(input);
+    if (queries.empty())
+        throw std::runtime_error("No queries found in input");
+    if (facts.empty())
+        throw std::runtime_error("No facts found in input");
 
-// }
-
-std::vector<Rule> parseRules(const vector<Token> input) {
-    (void)input;
-    /*int query_line = -1;
-    int fact_line = -1;
-    std::vector<Rule> rules;
-    Rule current_rule(Expr{Var{' '}}); // dummy initialization
-    Rule next_rule(Expr{Var{' '}}); // dummy initialization
-
-    char prev_var = '\0';
-    bool prev_was_var = false;
-
-    for (size_t i = 0; i < input.size(); i++) {
-        const Token &token = input[i];
-        if (token.line_number == query_line || token.line_number == fact_line)
+    for (size_t i = 0; i < input.size(); i++)
+    {   size_t line = input[i].line_number;
+        string comment;
+        if (line == queries[0].line_number || line == facts[0].line_number)
             continue;
-        const char c = token.token_list[0];
-        switch(token.type) {
-            case Token::Type::Variable:
-                prev_var = c;
-                if (prev_was_var)
-                    throw std::runtime_error("Two consecutive variables found, line: " + std::to_string(token.line_number));
-                prev_was_var = true;
-                current_rule.expr = Expr{Var{c}};
-                current_rule.line_number = token.line_number;
-                break;
-            
-            case Token::Type::Operator:
-                prev_was_var = false;
-                
-                break;
-            
-            case Token::Type::Fact:
-                if (fact_line != -1)
-                    throw std::runtime_error("Multiple fact definitions found, line: " + std::to_string(token.line_number));
-                fact_line = token.line_number;
-                prev_was_var = false;
-                break;
-            
-            case Token::Type::Query:
-                prev_was_var = false;
-                if (query_line != -1)
-                    throw std::runtime_error("Multiple query definitions found, line: " + std::to_string(token.line_number));
-                query_line = token.line_number;
-                break;
-            
-            case Token::Type::Parenthese:
-                prev_was_var = false;
-                break;
-            
-            case Token::Type::Comment:
-                prev_was_var = false;
-                current_rule.comment = token.token_list.substr(1); // skip the '#'
-                break;
-            
-            case Token::Type::NewLine:
-                prev_was_var = false;
-                if (current_rule.expr != Expr{Var{' '}}) { // if current_rule is not the dummy
-                    rules.push_back(current_rule);
-                    current_rule = Rule(Expr{Var{' '}}); // reset to dummy
-                }
-                break;
-            default:
-                throw std::runtime_error("Unknown token type");
+        vector<Token> line_tokens;
+        while (i < input.size() && input[i].type != Token::Type::NewLine )
+        {
+            line_tokens.push_back(input[i]);
+            i++;
         }
+        // if previous token was comment, remove it from line_tokens and save it
+        if (line_tokens.back().type == Token::Type::Comment)
+        {
+            comment = line_tokens.back().token_list.substr(1); // skip the '#'
+            line_tokens.pop_back();
+        }
+        Parser parser{0, line_tokens};
+        Expr expr = parser.parse();
+        rules.push_back(Rule(expr, line, comment));
     }
-    if (current_rule.expr != Expr{Var{' '}}) { // if current_rule is not the dummy
-        rules.push_back(current_rule);
-    }
-    return rules;
-    */
-   return {};
+
+    return {rules, facts, queries} ;
 }
 
 /*
@@ -91,7 +53,7 @@ std::vector<Rule> parseRules(const vector<Token> input) {
 ** It also captures comments that start with '#' on the same line.
 ** It throws an exception if multiple '=' tokens are found or if invalid characters are encountered.
 */
-std::vector<Fact> parseFacts(const vector<Token> input) {
+std::vector<Fact> parseFacts(const vector<Token> &input) {
     vector<Fact> fact;
     bool found = false;
     size_t line_number = 0;
@@ -134,7 +96,7 @@ std::vector<Fact> parseFacts(const vector<Token> input) {
 ** It also captures comments that start with '#' on the same line.
 ** It throws an exception if multiple '?' tokens are found or if invalid characters are encountered.
 */
-std::vector<Query> parseQueries(const vector<Token> input) {
+std::vector<Query> parseQueries(const vector<Token> &input) {
     vector<Query> queries;
     bool found = false;
     size_t line_number = 0;
