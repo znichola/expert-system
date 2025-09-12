@@ -42,8 +42,6 @@ struct Parser {
             case '^':
                 return Xor(lhs, rhs);
                 break;
-            case '&':
-                return And(lhs, rhs);
             case '=':
                 return Imply(lhs, rhs);
                 break;
