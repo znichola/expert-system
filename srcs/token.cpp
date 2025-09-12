@@ -69,6 +69,8 @@ vector<Token> tokenizer(string input)
                         }
                         else if (authorized == "(" || authorized == ")")
                             type = Token::Type::Parenthese;
+                        else if (authorized == "!")
+                            type = Token::Type::Unary;
                         else
                             type = Token::Type::Operator;
                         

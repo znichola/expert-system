@@ -60,6 +60,10 @@ int main() {
     test("((A=>B)=>(C=>D))");
     test("((A=>B)<=>C)");
     test("((A+B)=>(!C|D))");
+    test("!(A+B)");
+    test("(A|!(H+(!J^L)))");
+    test("(A|!(H+(J^!L)))");
+    test("!!(!A+!!!B)");
 
     std::cout << "\nOK's : " << test_count - ko_count << " / " << test_count << "\n";
 }

@@ -69,6 +69,14 @@ struct Parser {
         auto tok = current();
         if (!tok) return {};
 
+        // Handle unary NOT
+        if (tok->token_list == "!") {
+            index++;
+            auto operand = parseFactor();
+            if (!operand) throw std::runtime_error("Expected factor after '!'");
+            return Not(*operand);
+        }
+
         if (tok->type == Token::Type::Variable ) {
             index++;
             return Var(tok->token_list[0]);
