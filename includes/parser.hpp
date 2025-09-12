@@ -11,6 +11,18 @@ struct Parser {
         return {};
     }
 
+    Expr parse() {
+        auto expr = parseExpr();
+        if (index != tokens.size()) {
+            throw std::runtime_error("Unexpected tokens remaining after parsing");
+        }
+        if (!expr) {
+            throw std::runtime_error("Failed to parse expression");
+        }
+        return expr.value();
+    }
+    
+
     /* createNode implementation
     ** ----------------------------
     ** This function creates a new expression node based on the given token and its operands.
@@ -94,6 +106,7 @@ struct Parser {
             if (!rhs) throw std::runtime_error("Expected factor after operator: " + op.token_list);
             lhs = createNode(op, *lhs, *rhs);
         }
+        
         return lhs;
     }
 };
