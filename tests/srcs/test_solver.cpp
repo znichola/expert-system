@@ -18,10 +18,8 @@ int main () {
 
     Digraph digraph = makeDigraph(facts, rules);
 
-    SolveExpr solver;
-    solver.digraph = digraph;
-
-    Fact::State res = std::visit(solver, rules[0].expr);
-
-    cout << "Result: " << (res == Fact::State::True ? "True" : res == Fact::State::False ? "False" : "Undetermined") << endl;
+    for (const auto &q : queries) {
+        auto res = digraph.solveForFact(q.label);
+        cout << "Query " << q.label << " is " << res << std::endl;
+    }
 }

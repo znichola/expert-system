@@ -162,7 +162,7 @@ void Digraph::setExprVarsToTrue(const Expr &expr) {
     // else throw not handled yet
 }
 
-void Digraph::solveForFact(const char fact_id) {
+Fact::State Digraph::solveForFact(const char fact_id) {
     auto f = facts.find(fact_id);
 
     if (f == facts.end()){
@@ -175,17 +175,142 @@ void Digraph::solveForFact(const char fact_id) {
         std::cout << "solveForFact : solving " << r << std::endl;
         solveRule(r);
     }
+
+    return fact.state;
 }
 
 
-void Digraph::solveRule(const std::string &rule_id) {
+Fact::State Digraph::solveRule(const std::string &rule_id) {
     auto r = rules.find(rule_id);
     if (r == rules.end()) {
         throw std::runtime_error("Rule not found!");
     }
 
     Rule &rule(r->second);
+    auto res = solveExpr(rule.expr);
+    std::cout << "solveRule : result " << res << std::endl;
+    return res;
+}
 
+Fact::State Digraph::solveExpr(const Expr &expr) {
+    struct Solver {
+        Digraph &digraph;
+
+        Fact::State operator()(const Empty &)
+            {return Fact::State::Undetermined;}
+
+        Fact::State operator()(const Var &v)
+        {
+            auto it = digraph.facts.find(v.value());
+            if (it == digraph.facts.end()){
+                throw std::runtime_error("Fact not found in digraph!");
+            }
+
+            std::cout << "IN Var " << v << " "  << it->second.state << std::endl;
+
+            if (it->second.state == Fact::State::Undetermined) {
+                // if state is undefined, it needs to be solved for!
+                // leave it for now, afraid of infinite recursion
+                // Fact::State res = std::visit(*this, digraph.rules[0].expr);
+                digraph.solveForFact(it->second.id);
+            }
+            return it->second.state;
+        }
+
+        Fact::State operator()(const Not &n)
+        {
+            std::cout << "IN Not" << n << std::endl;
+            return visit(*this, n.child()) == Fact::State::True
+                ? Fact::State::False
+                : visit(*this, n.child()) == Fact::State::False
+                    ? Fact::State::True
+                    : Fact::State::Undetermined;
+        }
+
+        Fact::State operator()(const And &n)
+        {
+            std::cout << "IN And " << n << std::endl;
+            Fact::State lhs = visit(*this, n.lhs());
+            Fact::State rhs = visit(*this, n.rhs());
+            if (lhs == Fact::State::False || rhs == Fact::State::False) {
+                return Fact::State::False;
+            }
+            if (lhs == Fact::State::True && rhs == Fact::State::True) {
+                return Fact::State::True;
+            }
+            return Fact::State::Undetermined; 
+        }
+
+        Fact::State operator()(const Or &n)
+        {
+            std::cout << "IN Or " << n << std::endl;
+            Fact::State lhs = visit(*this, n.lhs());
+            Fact::State rhs = visit(*this, n.rhs());
+            if (lhs == Fact::State::True || rhs == Fact::State::True) {
+                return Fact::State::True;
+            }
+            if (lhs == Fact::State::False && rhs == Fact::State::False) {
+                return Fact::State::False;
+            }
+            return Fact::State::Undetermined;
+        }
+
+        Fact::State operator()(const Xor &n)
+        {
+            std::cout << "IN Xor " << n << std::endl;
+            Fact::State lhs = visit(*this, n.lhs());
+            Fact::State rhs = visit(*this, n.rhs());
+            if (lhs == Fact::State::Undetermined || rhs == Fact::State::Undetermined) {
+                return Fact::State::Undetermined;
+            }
+            if (lhs != rhs) {
+                return Fact::State::True;
+            }
+            return Fact::State::False;
+        }
+
+        // (A ⇒ B) ⇔ (¬A ∨ B)
+        Fact::State operator()(const Imply &n)
+        {
+            std::cout << "IN Imply " << n << std::endl;
+            Expr lhs_real = n.lhs();
+            Expr rhs_real = n.rhs();
+
+            Fact::State lhs_result = visit(*this, n.lhs());
+            // visiting rhs will lead to infinate recursion
+            // Fact::State rhs_result = visit(*this, n.rhs());
+            //(void)rhs_result;
+            if (lhs_result == Fact::State::Undetermined) {
+                return Fact::State::Undetermined;
+            }
+            if (lhs_result == Fact::State::True) {
+                std::cout << "Setting " << rhs_real <<" to true\n";
+                digraph.setExprVarsToTrue(rhs_real);
+            }
+            std::cout << "Solving Imply" << std::endl;
+
+            return visit(*this, Expr(Or(Not(lhs_real), rhs_real)));
+        }
+
+        // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
+        Fact::State operator()(const Iff &n)
+        {
+            std::cout << "IN Iff " << n << std::endl;
+            Expr lhs_real = n.lhs();
+            Expr rhs_real = n.rhs();
+
+            Fact::State lhs_result = visit(*this, n.lhs());
+            Fact::State rhs_result = visit(*this, n.rhs());
+            if (lhs_result == Fact::State::Undetermined || rhs_result == Fact::State::Undetermined) {
+                return Fact::State::Undetermined;
+            }
+            lhs_real = Imply(lhs_real, rhs_real);
+            rhs_real = Imply(rhs_real, lhs_real);
+            Expr both = And(lhs_real, rhs_real);
+            return visit(*this, both);
+        }
+    };
+    return std::visit(Solver{*this}, expr);
 }
 
 
