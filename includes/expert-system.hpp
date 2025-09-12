@@ -173,8 +173,15 @@ Foo solve(const std::vector<Rule> &rules,
 vector<Token> tokenizer(string input);
 
 /* parser.cpp */
+struct Parsing
+{
+    size_t index;
+    Expr lhs;
+};
 std::vector<Fact> parseFacts(const vector<Token> input);
-std::vector<Rule> parseRules(const vector<Token> input);
 std::vector<Query> parseQueries(const vector<Token> input);
+std::optional<Parsing> parseExpr(Parsing input, vector<Token> tokens);
+
+
 
 #endif /* EXPERT_SYSTEM_HPP */
