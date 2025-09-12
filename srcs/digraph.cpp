@@ -158,5 +158,19 @@ Fact::State Digraph::solveFor(const Query &query) {
 }
 
 
+Digraph makeDigraph(
+        const std::vector<Fact> &facts,
+        const std::vector<Rule> &rules) {
+    Digraph g;
 
+    for (const auto &f : facts) {
+        g.addFact(f);
+    }
+
+    for (const auto &r : rules) {
+        g.addRule(r);
+    }
+
+    return g;
+}
 

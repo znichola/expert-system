@@ -1,8 +1,8 @@
 # Fritz the frog
 
 # Rules
-C & E => F # if X croaks and eats flies, then X is frog
-H & S => K # if X chirps and sings, then X is a canary
+C + E => F # if X croaks and eats flies, then X is frog
+H + S => K # if X chirps and sings, then X is a canary
 F => G     # if X is a frog, then X is green
 K => Y     # if X is a canary, then X is yellow
 

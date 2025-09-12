@@ -1,6 +1,9 @@
 #include "expert-system.hpp"
 
 
+std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
+    parseTokens(const vector<Token> &input);
+
 
 struct Parser {
     size_t index;

@@ -41,7 +41,7 @@ struct Token {
 // parseRules returns a vector of Rules
 struct Rule {
     const Expr expr;
-    int line_number = -1;
+    size_t line_number = -1;
     int index = -1;
     std::string comment;
     const std::string id;
@@ -78,7 +78,7 @@ struct Fact {
 
     const char label;
     State state = State::Undetermined;
-    const int line_number = -1;
+    const size_t line_number = -1;
     std::string comment;
     const char id;
 
@@ -115,7 +115,7 @@ inline std::ostream& operator<<(std::ostream& os, const Fact& f) {
 // parseQueries returns a vector of Query
 struct Query {
     const char label;
-    const int line_number = -1;
+    const size_t line_number = -1;
     std::string comment;
 
     Query() = delete;
@@ -167,6 +167,10 @@ inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
     return os << g.toString();
 }
 
+Digraph makeDigraph(
+        const std::vector<Fact> &facts,
+        const std::vector<Rule> &rules);
+
 /* solver.cpp */
 struct Foo {};
 Foo solve(const std::vector<Rule> &rules,
@@ -182,9 +186,8 @@ struct Parsing
     size_t index;
     Expr lhs;
 };
-std::vector<Fact> parseFacts(const vector<Token> input);
-std::vector<Query> parseQueries(const vector<Token> input);
-std::optional<Parsing> parseExpr(Parsing input, vector<Token> tokens);
+std::vector<Fact> parseFacts(const vector<Token> &input);
+std::vector<Query> parseQueries(const vector<Token> &input);
 
 
 

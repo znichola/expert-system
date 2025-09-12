@@ -5,7 +5,7 @@ A => L # if X is the ultimate answer, then X explains life
 A => U # if X is the ultimate answer, then X explains the universe 
 A => E # if X is the ultimate answer, then X explains everyting
 
-L & U & E => M  # if X explains Life, the universe and everthing, then X is meaningful
+L + U + E => M  # if X explains Life, the universe and everthing, then X is meaningful
 
 # Facts about 42
 =A # 42 is the answer
