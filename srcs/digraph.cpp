@@ -140,7 +140,7 @@ void Digraph::addRule(const Rule &rule) {
     return;
 }
 
-bool Digraph::setExprVarsToTrue(const Expr &expr) {
+void Digraph::setExprVarsToTrue(const Expr &expr) {
 
     if (auto v = std::get_if<Var>(&expr)) {
         auto it = facts.find(v->value());
@@ -160,41 +160,32 @@ bool Digraph::setExprVarsToTrue(const Expr &expr) {
     // if expr is And, recursivly call and set children to true
     
     // else throw not handled yet
-
-    return false;
 }
 
-Fact::State Digraph::solveFor(const Query &query) {
-    auto f = facts.find(query.label);
+void Digraph::solveForFact(const char fact_id) {
+    auto f = facts.find(fact_id);
 
     if (f == facts.end()){
         throw std::runtime_error("Fact not found, impossible to solve!");
     }
+
     Fact &fact(f->second);
 
     for (const auto &r : fact.consequent_rules) {
-        (void)r;
+        std::cout << "solveForFact : solving " << r << std::endl;
+        solveRule(r);
     }
-
-    return Fact::State::Undetermined;
 }
 
 
-Fact::State Digraph::solveRule(const std::string &rule_id) {
-    
+void Digraph::solveRule(const std::string &rule_id) {
     auto r = rules.find(rule_id);
     if (r == rules.end()) {
         throw std::runtime_error("Rule not found!");
     }
+
     Rule &rule(r->second);
 
-    Fact::State result = Fact::State::Undetermined;
-    (void)result;
-    for (const auto &f : rule.antecedent_facts) {
-        (void)f;
-    }
-
-    return Fact::State::Undetermined;
 }
 
 

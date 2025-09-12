@@ -155,6 +155,7 @@ struct Digraph {
 
     FactsMap facts;
     RulesMap rules;
+//    FactMap  questFacts; // facts for which a search is already launched
 
     void addFact(const Fact &fact);
 
@@ -165,10 +166,11 @@ struct Digraph {
     std::string toDot() const;
     std::vector<char> trueFacts() const;
 
-    Fact::State solveFor(const Query &query);
-    Fact::State solveRule(const std::string &rule_id);
+    // These two functions are mutually recursive
+    void solveForFact(const char fact_id);
+    void solveRule(const std::string &rule_id);
 
-    bool setExprVarsToTrue(const Expr &expr);
+    void setExprVarsToTrue(const Expr &expr);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
@@ -197,7 +199,8 @@ struct SolveExpr {
 
         if (it->second.state == Fact::State::Undetermined) {
             // if state is undefined, it needs to be solved for!
-            // leave it for now, afraid of infinat recursion 
+            // leave it for now, afraid of infinite recursion
+            // Fact::State res = std::visit(*this, digraph.rules[0].expr);
         }
         return it->second.state;
     }
@@ -254,6 +257,7 @@ struct SolveExpr {
         return Fact::State::False;
     }
 
+    // (A ⇒ B) ⇔ (¬A ∨ B)
     Fact::State operator()(const Imply &n)
     {
         std::cout << "IN Imply " << n << std::endl;
@@ -278,6 +282,7 @@ struct SolveExpr {
         return visit(*this, lhs_real);
     }
 
+    // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
     Fact::State operator()(const Iff &n)
     {
         std::cout << "IN Iff " << n << std::endl;
@@ -295,11 +300,6 @@ struct SolveExpr {
         return visit(*this, both);
     }
 };
-/*
-(A ⇒ B) ⇔ (¬A ∨ B)
-VIII.3 Equivalence
-(A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
-*/
 
 
 /* solver.cpp */
