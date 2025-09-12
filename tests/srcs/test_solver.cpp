@@ -1,25 +1,71 @@
 #include "expert-system.hpp"
 #include "parser.hpp"
 
-using std::cout, std::endl;
+#define GREEN   "\033[32m"
+#define RED     "\033[31m"
+#define RESET   "\033[0m"
 
+using std::cout;
+using std::endl;
 
-int main () {
-    cout << "Testing solver" << endl;
+// Struct for a single test case
+struct Test {
+    std::string ruleSet;                       // input rules/facts/queries
+    std::unordered_map<char, Fact::State> expected;    // expected results for queries
+};
 
-    // using input files pass them through the whole system and check the output
-    struct Test {
-        string inputString;
-        string expectedDot;
-    };
+// Helper to run one test
+void runTest(const Test &t) {
+    cout << "Running test with ruleset:\n" << t.ruleSet << endl;
 
-    auto tokens = tokenizer("A=>B\n=A\n?B");
+    auto tokens = tokenizer(t.ruleSet);
     auto [rules, facts, queries] = parseTokens(tokens);
 
     Digraph digraph = makeDigraph(facts, rules);
 
-    for (const auto &q : queries) {
-        auto res = digraph.solveForFact(q.label);
-        cout << "Query " << q.label << " is " << res << std::endl;
+    for (const auto &[label, expectedState] : t.expected) {
+        auto res = digraph.solveForFact(label);
+
+        cout << "Query " << label << " got " << res
+             << " (expected " << expectedState << ")\n";
+
+        if (res != expectedState) {
+            cout << RED << "KO " << RESET << label << endl;
+        } else {
+            cout << GREEN << "OK" << RESET << endl;
+        }
+    }
+
+    cout << "--------------------------------------\n";
+}
+
+int main() {
+    cout << "Testing solver" << endl;
+
+    std::vector<Test> tests = {
+        {
+            "A=>B\n=A\n?B",
+            { {'B', Fact::State::True} }
+        },
+        // {
+        //     "!A=>B\n=A\n?B",
+        //     { {'B', Fact::State::False} }
+        // },
+        {
+            "A|B=>C\n=A\n?C",
+            { {'C', Fact::State::True} }
+        },
+        {
+            "A|B=>C\n=B\n?C",
+            { {'C', Fact::State::True} }
+        },
+        {
+            "C+E=>F\nH+S=>K\nF=>G\nK=>Y\n=CE\n?G",
+            { {'G', Fact::State::True} }
+        }
+    };
+
+    for (const auto &t : tests) {
+        runTest(t);
     }
 }

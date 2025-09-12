@@ -172,7 +172,7 @@ Fact::State Digraph::solveForFact(const char fact_id) {
     Fact &fact(f->second);
 
     for (const auto &r : fact.consequent_rules) {
-        std::cout << "solveForFact : solving " << r << std::endl;
+        std::cout << "solveForFact " << fact_id << ": solving " << r << std::endl;
         solveRule(r);
     }
 
@@ -188,7 +188,7 @@ Fact::State Digraph::solveRule(const std::string &rule_id) {
 
     Rule &rule(r->second);
     auto res = solveExpr(rule.expr);
-    std::cout << "solveRule : result " << res << std::endl;
+    std::cout << "solveRule " << rule_id << ": result " << res << std::endl;
     return res;
 }
 
