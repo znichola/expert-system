@@ -241,6 +241,7 @@ inline std::vector<char> Expr::getAllFacts() const {
 }
 
 
+
 //////////////////////////////////////////
 /// FUNCITONS
 /// 

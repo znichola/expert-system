@@ -139,19 +139,34 @@ void Digraph::addRule(const Rule &rule) {
     return;
 }
 
-
 Fact::State Digraph::solveFor(const Query &query) {
     auto f = facts.find(query.label);
 
     if (f == facts.end()){
-        std::cout << "Fact not found, not possible!" << std::endl;
-        return Fact::State::Undetermined;
+        throw std::runtime_error("Fact not found, impossible to solve!");
     }
-    Fact fact(f->second);
+    Fact &fact(f->second);
 
     for (const auto &r : fact.consequent_rules) {
         (void)r;
-        // r : solve this rule, if possible, see if this solves the fact
+    }
+
+    return Fact::State::Undetermined;
+}
+
+
+Fact::State Digraph::solveRule(const std::string &rule_id) {
+    
+    auto r = rules.find(rule_id);
+    if (r == rules.end()) {
+        throw std::runtime_error("Rule not found!");
+    }
+    Rule &rule(r->second);
+
+    Fact::State result = Fact::State::Undetermined;
+    (void)result;
+    for (const auto &f : rule.antecedent_facts) {
+        (void)f;
     }
 
     return Fact::State::Undetermined;

@@ -161,6 +161,7 @@ struct Digraph {
     std::vector<char> trueFacts() const;
 
     Fact::State solveFor(const Query &query);
+    Fact::State solveRule(const std::string &rule_id);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
@@ -170,6 +171,108 @@ inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
 Digraph makeDigraph(
         const std::vector<Fact> &facts,
         const std::vector<Rule> &rules);
+
+
+struct SolveExpr {
+    Digraph digraph;
+
+    Fact::State operator()(const Empty &) const 
+        {return Fact::State::Undetermined;}
+
+    Fact::State operator()(const Var &v) const
+    {
+        auto it = digraph.facts.find(v.value());
+        if (it == digraph.facts.end()){
+            throw std::runtime_error("Fact not found in digraph!");
+        }
+        return it->second.state;
+    }
+
+    Fact::State operator()(const Not &n) const
+    {
+        return visit(*this, n.child()) == Fact::State::True
+            ? Fact::State::False
+            : visit(*this, n.child()) == Fact::State::False
+                ? Fact::State::True
+                : Fact::State::Undetermined;
+    }
+
+    Fact::State operator()(const And &n) const
+    {
+        Fact::State lhs = visit(*this, n.lhs());
+        Fact::State rhs = visit(*this, n.rhs());
+        if (lhs == Fact::State::False || rhs == Fact::State::False) {
+            return Fact::State::False;
+        }
+        if (lhs == Fact::State::True && rhs == Fact::State::True) {
+            return Fact::State::True;
+        }
+        return Fact::State::Undetermined; 
+    }
+
+    Fact::State operator()(const Or &n) const
+    {
+        Fact::State lhs = visit(*this, n.lhs());
+        Fact::State rhs = visit(*this, n.rhs());
+        if (lhs == Fact::State::True || rhs == Fact::State::True) {
+            return Fact::State::True;
+        }
+        if (lhs == Fact::State::False && rhs == Fact::State::False) {
+            return Fact::State::False;
+        }
+        return Fact::State::Undetermined;
+    }
+
+    Fact::State operator()(const Xor &n) const
+    {
+        Fact::State lhs = visit(*this, n.lhs());
+        Fact::State rhs = visit(*this, n.rhs());
+        if (lhs == Fact::State::Undetermined || rhs == Fact::State::Undetermined) {
+            return Fact::State::Undetermined;
+        }
+        if (lhs != rhs) {
+            return Fact::State::True;
+        }
+        return Fact::State::False;
+    }
+
+    Fact::State operator()(const Imply &n) const
+    {
+        Expr lhs_real = n.lhs();
+        Expr rhs_real = n.rhs();
+
+        Fact::State lhs_result = visit(*this, n.lhs());
+        Fact::State rhs_result = visit(*this, n.rhs());
+        if (lhs_result == Fact::State::Undetermined || rhs_result == Fact::State::Undetermined) {
+            return Fact::State::Undetermined;
+        }
+        lhs_real = Not(lhs_real);
+        lhs_real = Or(lhs_real, rhs_real);
+        return visit(*this, lhs_real);
+    }
+
+    Fact::State operator()(const Iff &n) const
+    {
+        Expr lhs_real = n.lhs();
+        Expr rhs_real = n.rhs();
+
+        Fact::State lhs_result = visit(*this, n.lhs());
+        Fact::State rhs_result = visit(*this, n.rhs());
+        if (lhs_result == Fact::State::Undetermined || rhs_result == Fact::State::Undetermined) {
+            return Fact::State::Undetermined;
+        }
+        lhs_real = Imply(lhs_real, rhs_real);
+        rhs_real = Imply(rhs_real, lhs_real);
+        Expr both = And(lhs_real, rhs_real);
+        return visit(*this, both);
+    }
+};
+/*
+(A ⇒ B) ⇔ (¬A ∨ B)
+VIII.3 Equivalence
+(A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
+*/
+
 
 /* solver.cpp */
 struct Foo {};
