@@ -111,6 +111,11 @@ inline std::ostream& operator<<(std::ostream& os, const Fact& f) {
     return os;
 }
 
+inline std::ostream& operator<<(std::ostream& os, const Fact::State s) {
+    os << (s == Fact::State::True ? "True" :
+            s == Fact::State::False ? "False" : "Undetermined");
+    return os;
+}
 
 // parseQueries returns a vector of Query
 struct Query {
@@ -162,6 +167,8 @@ struct Digraph {
 
     Fact::State solveFor(const Query &query);
     Fact::State solveRule(const std::string &rule_id);
+
+    bool setExprVarsToTrue(const Expr &expr);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
@@ -176,20 +183,28 @@ Digraph makeDigraph(
 struct SolveExpr {
     Digraph digraph;
 
-    Fact::State operator()(const Empty &) const 
+    Fact::State operator()(const Empty &)
         {return Fact::State::Undetermined;}
 
-    Fact::State operator()(const Var &v) const
+    Fact::State operator()(const Var &v)
     {
         auto it = digraph.facts.find(v.value());
         if (it == digraph.facts.end()){
             throw std::runtime_error("Fact not found in digraph!");
         }
+
+        std::cout << "IN Var " << v << " "  << it->second.state << std::endl;
+
+        if (it->second.state == Fact::State::Undetermined) {
+            // if state is undefined, it needs to be solved for!
+            // leave it for now, afraid of infinat recursion 
+        }
         return it->second.state;
     }
 
-    Fact::State operator()(const Not &n) const
+    Fact::State operator()(const Not &n)
     {
+        std::cout << "IN Not" << n << std::endl;
         return visit(*this, n.child()) == Fact::State::True
             ? Fact::State::False
             : visit(*this, n.child()) == Fact::State::False
@@ -197,8 +212,9 @@ struct SolveExpr {
                 : Fact::State::Undetermined;
     }
 
-    Fact::State operator()(const And &n) const
+    Fact::State operator()(const And &n)
     {
+        std::cout << "IN And " << n << std::endl;
         Fact::State lhs = visit(*this, n.lhs());
         Fact::State rhs = visit(*this, n.rhs());
         if (lhs == Fact::State::False || rhs == Fact::State::False) {
@@ -210,8 +226,9 @@ struct SolveExpr {
         return Fact::State::Undetermined; 
     }
 
-    Fact::State operator()(const Or &n) const
+    Fact::State operator()(const Or &n)
     {
+        std::cout << "IN Or " << n << std::endl;
         Fact::State lhs = visit(*this, n.lhs());
         Fact::State rhs = visit(*this, n.rhs());
         if (lhs == Fact::State::True || rhs == Fact::State::True) {
@@ -223,8 +240,9 @@ struct SolveExpr {
         return Fact::State::Undetermined;
     }
 
-    Fact::State operator()(const Xor &n) const
+    Fact::State operator()(const Xor &n)
     {
+        std::cout << "IN Xor " << n << std::endl;
         Fact::State lhs = visit(*this, n.lhs());
         Fact::State rhs = visit(*this, n.rhs());
         if (lhs == Fact::State::Undetermined || rhs == Fact::State::Undetermined) {
@@ -236,23 +254,33 @@ struct SolveExpr {
         return Fact::State::False;
     }
 
-    Fact::State operator()(const Imply &n) const
+    Fact::State operator()(const Imply &n)
     {
+        std::cout << "IN Imply " << n << std::endl;
         Expr lhs_real = n.lhs();
         Expr rhs_real = n.rhs();
 
         Fact::State lhs_result = visit(*this, n.lhs());
         Fact::State rhs_result = visit(*this, n.rhs());
-        if (lhs_result == Fact::State::Undetermined || rhs_result == Fact::State::Undetermined) {
+        (void)rhs_result;
+        if (lhs_result == Fact::State::Undetermined) {
             return Fact::State::Undetermined;
         }
+        if (lhs_result == Fact::State::True) {
+            std::cout << "Setting " << rhs_real <<" to true\n";
+            digraph.setExprVarsToTrue(rhs_real);
+        }
+        std::cout << "Solving Imply" << std::endl;
+
         lhs_real = Not(lhs_real);
         lhs_real = Or(lhs_real, rhs_real);
+
         return visit(*this, lhs_real);
     }
 
-    Fact::State operator()(const Iff &n) const
+    Fact::State operator()(const Iff &n)
     {
+        std::cout << "IN Iff " << n << std::endl;
         Expr lhs_real = n.lhs();
         Expr rhs_real = n.rhs();
 

@@ -110,6 +110,7 @@ void Digraph::addRule(const Rule &rule) {
         throw std::runtime_error("Invalid rule");
     }
 
+
     auto g = rule.expr.getValues();
 
     if(g.lhs && g.rhs) {
@@ -137,6 +138,30 @@ void Digraph::addRule(const Rule &rule) {
 
     // TODO : handel if-and-only-if which adds a second rule with terms flipped
     return;
+}
+
+bool Digraph::setExprVarsToTrue(const Expr &expr) {
+
+    if (auto v = std::get_if<Var>(&expr)) {
+        auto it = facts.find(v->value());
+        if (it == facts.end()) {
+            throw std::runtime_error("Fact not found, but must exist");
+        }
+        Fact &fact(it->second);
+        if (fact.state == Fact::State::False) {
+            throw std::runtime_error("Cannont set fact " + 
+                    fact.toString() + "  to true, it's already false");
+        }
+        fact.state = Fact::State::True;
+    }
+
+    // if expr is a Var, find this var and set it to true, throw on conflict
+    
+    // if expr is And, recursivly call and set children to true
+    
+    // else throw not handled yet
+
+    return false;
 }
 
 Fact::State Digraph::solveFor(const Query &query) {
