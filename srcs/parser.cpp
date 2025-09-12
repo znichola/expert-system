@@ -5,6 +5,8 @@
 
 #include "expert-system.hpp"
 
+std::tuple<size_t, vector<Token>, string> getNextLine(const vector<Token> &tokens, size_t index);
+
 std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
     parseTokens(const vector<Token> &input) {
     // take the list of tokens, split into lines then keep the comments to one side, and 
@@ -19,31 +21,48 @@ std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
     if (facts.empty())
         throw std::runtime_error("No facts found in input");
 
-    for (size_t i = 0; i < input.size(); i++)
-    {   size_t line = input[i].line_number;
-        string comment;
-        if (line == queries[0].line_number || line == facts[0].line_number)
-            continue;
-        vector<Token> line_tokens;
-        while (i < input.size() && input[i].type != Token::Type::NewLine )
-        {
-            line_tokens.push_back(input[i]);
+    size_t i = 0;
+    while (i < input.size())
+    {
+        if (input[i].line_number == queries[0].line_number ||
+            input[i].line_number == facts[0].line_number) {
             i++;
+            continue; // skip facts and queries lines
         }
-        // if previous token was comment, remove it from line_tokens and save it
-        if (line_tokens.back().type == Token::Type::Comment)
-        {
-            comment = line_tokens.back().token_list.substr(1); // skip the '#'
-            line_tokens.pop_back();
+        auto [newI, lineTokens, comment] = getNextLine(input, i);
+        i = newI;
+        if (!lineTokens.empty()) {
+            Parser parser{0, lineTokens};
+
+            try {
+                Expr expr = parser.parse();
+                rules.push_back(Rule(expr, lineTokens[0].line_number, comment));
+            } catch (const std::exception &e) {
+                std::cerr << "Line: " << lineTokens[0].line_number << " :" << e.what() << std::endl;
+            }
         }
-        Parser parser{0, line_tokens};
-        Expr expr = parser.parse();
-        rules.push_back(Rule(expr, line, comment));
     }
 
     return {rules, facts, queries} ;
-}
+};
 
+
+// make a get next line function that takes a tokens vector and return a new vector of just the line and the new index
+std::tuple<size_t, vector<Token>, string> getNextLine(const vector<Token> &tokens, size_t index) {
+    vector<Token> line_tokens;
+    size_t line_number = tokens[index].line_number;
+    string comment = "";
+    while (index < tokens.size() && tokens[index].line_number == line_number) {
+        if (tokens[index].type != Token::Type::NewLine)
+            line_tokens.push_back(tokens[index]);
+        index++;
+    }
+    if (!line_tokens.empty() && line_tokens.back().type == Token::Type::Comment) {
+        comment = line_tokens.back().token_list.substr(1); // skip the '#'
+        line_tokens.pop_back();
+    }
+    return {index, line_tokens, comment};
+}
 /*
 ** parseFacts implementation
 ** ----------------------------

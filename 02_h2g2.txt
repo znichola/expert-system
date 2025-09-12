@@ -12,3 +12,4 @@ L + U + E => M  # if X explains Life, the universe and everthing, then X is mean
 
 # Query
 ?U # is 42 meaningful ?
+ 

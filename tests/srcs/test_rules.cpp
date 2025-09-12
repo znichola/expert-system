@@ -28,13 +28,56 @@ K => Y     # if X is a canary, then X is yellow
 
 # Facts about Fritz
 =CE # croaks, eats flies
-
 # Query, or question being asked
 ?G # Is Fritz green?)"},
-        {R"(
-        
-            )"}}
+        {R"DELIM(strict digraph {
+  Y -> "(K=>Y)"
+  G -> "(F=>G)"
+  H
+  K -> "((H+S)=>K)"
+  S
+  F -> "((C+E)=>F)"
+  E
+  C
+
+
+  "(K=>Y)" -> K
+  "(F=>G)" -> F
+  "((H+S)=>K)" -> H
+  "((H+S)=>K)" -> S
+  "((C+E)=>F)" -> C
+  "((C+E)=>F)" -> E
+}
+)DELIM"}},
+{{R"DELIM(A => L # if X is the ultimate answer, then X explains life
+A => U # if X is the ultimate answer, then X explains the universe 
+A => E # if X is the ultimate answer, then X explains everyting
+
+L + U + E => M  # if X explains Life, the universe and everthing, then X is meaningful
+
+# Facts about 42
+=A # 42 is the answer
+
+# Query
+?U # is 42 meaningful ?)DELIM"},
+{R"DELIM(strict digraph {
+  M -> "(((L+U)+E)=>M)"
+  E -> "(A=>E)"
+  U -> "(A=>U)"
+  L -> "(A=>L)"
+  A
+
+
+  "(((L+U)+E)=>M)" -> L
+  "(((L+U)+E)=>M)" -> U
+  "(((L+U)+E)=>M)" -> E
+  "(A=>E)" -> A
+  "(A=>U)" -> A
+  "(A=>L)" -> A
+}
+)DELIM"}},
     };
+    
 
     for (const auto& test : fileParsingValidation) {
         if (!runTest(test)) {
