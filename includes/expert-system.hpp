@@ -170,7 +170,7 @@ struct Digraph {
     Fact::State solveForFact(const char fact_id);
     Fact::State solveRule(const std::string &rule_id);
 
-    void setExprVarsToTrue(const Expr &expr);
+    void setExprVarsToState(const Expr &expr, const Fact::State state);
 
     Fact::State solveExpr(const Expr &expr);
 

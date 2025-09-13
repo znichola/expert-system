@@ -140,7 +140,7 @@ void Digraph::addRule(const Rule &rule) {
     return;
 }
 
-void Digraph::setExprVarsToTrue(const Expr &expr) {
+void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
 
     if (auto v = std::get_if<Var>(&expr)) {
         auto it = facts.find(v->value());
@@ -148,17 +148,28 @@ void Digraph::setExprVarsToTrue(const Expr &expr) {
             throw std::runtime_error("Fact not found, but must exist");
         }
         Fact &fact(it->second);
-        if (fact.state == Fact::State::False) {
-            throw std::runtime_error("Cannont set fact " + 
-                    fact.toString() + "  to true, it's already false");
+
+        if (fact.state == Fact::State::Undetermined) {
+            fact.state = state;
+        } else if (state != fact.state) {
+            std::stringstream ss;
+            ss << "Contradiciton: Cannont set fact " << fact << " to "
+               << state << " it's already " << fact.state;
+            throw std::runtime_error(ss.str());
+        } else {
+            std::cout
+            << "No point in setting expr to Undetermined, it is by default\n";
         }
-        fact.state = Fact::State::True;
+        return ;
     }
 
+    throw std::runtime_error("Set facts not handled for this expr "
+            + expr.toString());
+
     // if expr is a Var, find this var and set it to true, throw on conflict
-    
+
     // if expr is And, recursivly call and set children to true
-    
+
     // else throw not handled yet
 }
 
@@ -281,15 +292,22 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
             // Fact::State rhs_result = visit(*this, n.rhs());
             //(void)rhs_result;
             if (lhs_result == Fact::State::Undetermined) {
+                std::cout << "Rule" << n <<  "resolution is undetermined\n";
                 return Fact::State::Undetermined;
             }
-            if (lhs_result == Fact::State::True) {
-                std::cout << "Setting " << rhs_real <<" to true\n";
-                digraph.setExprVarsToTrue(rhs_real);
-            }
+            std::cout << "Setting " << rhs_real << " to " << lhs_result << "\n";
+
+            digraph.setExprVarsToState(rhs_real, lhs_result);
+
             std::cout << "Solving Imply" << std::endl;
 
-            return visit(*this, Expr(Or(Not(lhs_real), rhs_real)));
+            auto res = visit(*this, Expr(Or(Not(lhs_real), rhs_real)));
+
+            if (res == Fact::State::False) {
+                throw std::runtime_error("Contradiction, Rule "
+                        + Expr(n).toString() + " resolved to false\n");
+            }
+            return res;
         }
 
         // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
