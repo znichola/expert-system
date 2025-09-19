@@ -17,7 +17,7 @@ LEAKS_CHECK = valgrind
 
 EXAMPLE_FILE = example_file.txt
 
-FILES	= parser expression token solver digraph 
+FILES	= parser expression token solver digraph server
 
 MAIN_SRC	= srcs/main.cpp
 MAIN_OBJ	= objs/main.o
@@ -33,10 +33,10 @@ all	: $(NAME)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $(INCS_PATH) -o $@ $<
+	$(CC) $(CFLAGS) -c $(INCS_PATH) -I$(HOME)/graphviz-static/include -o $@ $<
 
 $(NAME)	: $(OBJS) $(MAIN_OBJ)
-	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) -o $@
+	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) -L$(HOME)/graphviz-static/lib -lxdot -lcgraph -lgvc -o $@
 
 clean	:
 	-rm $(OBJS) $(MAIN_OBJ)
