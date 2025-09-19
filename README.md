@@ -39,3 +39,20 @@ deduplication.
 
 So, a hashmap between [ast\_string or id] & rule\_struct
 
+
+## Graphviz
+
+[Graphviz](https://graphviz.org/) is a prgram to display graphs, and it can also be included in my c++ project. We will use it to display the generated graph in a webserver.
+
+We want to install it as a static lib, we will then link this to the project and use it!
+
+In a folder somewhere download the tar for the release, unpackage it, configure, then make, then insall (put the resulting lib & binaries somewhere).
+
+```bash
+wget https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/13.1.2/graphviz-13.1.2.tar.gz
+tar -xf graphviz-13.1.2
+cd graphviz-13.1.2
+./configure --enable-static --disable-shared --prefix=$HOME/graphviz-static
+make
+make all
+```
