@@ -10,8 +10,8 @@ using std::endl;
 
 // Struct for a single test case
 struct Test {
-    std::string ruleSet;                             // input rules/facts/queries
-    std::unordered_map<char, Fact::State> expected;  // expected results for queries
+    std::string ruleSet;                            // input rules/facts/queries
+    std::unordered_map<char, Fact::State> expected; // expected results for queries
 };
 
 // Helper to run one test
@@ -62,7 +62,16 @@ int main() {
         {
             "C+E=>F\nH+S=>K\nF=>G\nK=>Y\n=CE\n?G",
             { {'G', Fact::State::True} }
+        },
+        {
+            "A=>B\nB=>C\nC=>D\nD=>A\n=A\n?D",
+            { {'D', Fact::State::True} }
+        },
+        {
+            "A=>B\nB=>C\nC=>D\nD=>A\n=Z\n?D",
+            { {'D', Fact::State::Undetermined} }
         }
+
     };
 
     for (const auto &t : tests) {
