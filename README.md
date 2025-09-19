@@ -52,7 +52,7 @@ In a folder somewhere download the tar for the release, unpackage it, configure,
 wget https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/13.1.2/graphviz-13.1.2.tar.gz
 tar -xf graphviz-13.1.2
 cd graphviz-13.1.2
-./configure --enable-static --disable-shared --prefix=$HOME/graphviz-static
+./configure --enable-static --disable-shared --enable-ltdl=no --prefix=$HOME/graphviz-static
 make
 make all
 ```

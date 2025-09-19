@@ -37,7 +37,8 @@ $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
 	$(CC) $(CFLAGS) -c $(INCS_PATH) -o $@ $<
 
 $(NAME)	: $(OBJS) $(MAIN_OBJ)
-	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) -o $@
+	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) -L$(HOME)/graphviz-static/lib \
+	-lgvc -lcgraph -lcdt -lxdot -lpathplan -lgvpr -lz -lm -lpng -lexpat -o $@
 
 clean	:
 	-rm $(OBJS) $(MAIN_OBJ)
