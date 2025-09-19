@@ -30,6 +30,25 @@ INCS_PATH = -Iincludes/.
 SRCS	= $(addprefix $(SRCS_PATH), $(addsuffix .cpp, $(FILES)))
 OBJS	= $(addprefix $(OBJS_PATH), $(addsuffix .o, $(FILES)))
 
+
+
+GV_PLUGIN_DIR = $(HOME)/graphviz-static/lib/graphviz
+
+GV_PLUGINS = \
+    $(GV_PLUGIN_DIR)/libgvplugin_core.a \
+    $(GV_PLUGIN_DIR)/libgvplugin_dot_layout.a \
+    $(GV_PLUGIN_DIR)/libgvplugin_neato_layout.a \
+    $(GV_PLUGIN_DIR)/libgvplugin_pango.a \
+    $(GV_PLUGIN_DIR)/libgvplugin_gdk.a \
+    $(GV_PLUGIN_DIR)/libgvplugin_kitty.a \
+    $(GV_PLUGIN_DIR)/libgvplugin_xlib.a \
+    $(GV_PLUGIN_DIR)/libgvplugin_vt.a
+
+GV_LIBS = -L$(HOME)/graphviz-static/lib \
+    -lgvc -lcgraph -lcdt -lxdot -lpathplan -lgvpr -lz -lm -lpng -lexpat \
+    $(GV_PLUGINS)
+
+
 all	: $(NAME)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
@@ -37,8 +56,7 @@ $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
 	$(CC) $(CFLAGS) -c $(INCS_PATH) -o $@ $<
 
 $(NAME)	: $(OBJS) $(MAIN_OBJ)
-	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) -L$(HOME)/graphviz-static/lib \
-	-lgvc -lcgraph -lcdt -lxdot -lpathplan -lgvpr -lz -lm -lpng -lexpat -o $@
+	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) $(GV_LIBS) -o $@
 
 clean	:
 	-rm $(OBJS) $(MAIN_OBJ)
