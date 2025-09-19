@@ -1,8 +1,6 @@
-#ifndef EXPRESSION_HPP
-# define EXPRESSION_HPP
+#pragma once
 
 # include <string>
-# include <memory>
 # include <variant>
 # include <vector>
 # include <optional>
@@ -239,13 +237,3 @@ inline std::vector<char> Expr::getAllFacts() const {
     std::cerr << "ERROR | an expression should always have facts!";
     return {};
 }
-
-
-
-//////////////////////////////////////////
-/// FUNCITONS
-/// 
-/// and usefull stuffs
-
-#endif /* EXPRESSION_HPP */
-

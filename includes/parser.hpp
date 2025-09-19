@@ -1,5 +1,5 @@
+#pragma once
 #include "expert-system.hpp"
-
 
 std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
     parseTokens(const vector<Token> &input);
