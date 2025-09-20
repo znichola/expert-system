@@ -33,10 +33,10 @@ all	: $(NAME)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $(INCS_PATH) -I$(HOME)/graphviz-static/include -o $@ $<
+	$(CC) $(CFLAGS) -c $(INCS_PATH) -o $@ $<
 
 $(NAME)	: $(OBJS) $(MAIN_OBJ)
-	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) -L$(HOME)/graphviz-static/lib -lxdot -lcgraph -lgvc -o $@
+	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) -o $@
 
 clean	:
 	-rm $(OBJS) $(MAIN_OBJ)

@@ -26,7 +26,7 @@ int main(int argc, char ** argv) {
 
     if (isHelpPrint(opts, argv[0])) 
         return 0;
-    
+
     if (isServerLaunch(opts))
         return 0;
 
