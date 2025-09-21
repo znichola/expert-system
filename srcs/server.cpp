@@ -1,22 +1,13 @@
-    extern "C" {
-        #include <graphviz/gvc.h>
-
-        #include <graphviz/gvplugin_dot_layout.h>
-
-        // extern gvplugin_library_t gvplugin_dot_layout_LTX_library;
-    }
+    #include <graphviz/gvc.h>
 
     #include <iostream>
 
     void launchGraphvisServer() {
-        std::cout << "Launding grpahvis server!\n" << std::endl;
-
+        // std::cout << "Launding grpahvis server!\n" << std::endl;
+ 
         std::string dotSpec = "strict digraph {A -> B\nB -> C }";
 
         GVC_t *gvc = gvContext();
-        gvplugin_dot_layout_register();
-        // gvAddLibrary(gvc, &gvplugin_dot_layout_LTX_library);
-
 
         Agraph_t *g = agmemread(dotSpec.c_str());
         if (!g) {
@@ -27,7 +18,7 @@
 
         gvLayout(gvc, g, "dot");
 
-        gvRender(gvc, g, "plain", stdout);
+        gvRender(gvc, g, "png", stdout);
 
         gvFreeLayout(gvc, g);
 

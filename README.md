@@ -44,6 +44,8 @@ So, a hashmap between [ast\_string or id] & rule\_struct
 
 [Graphviz](https://graphviz.org/) is a prgram to display graphs, and it can also be included in my c++ project. We will use it to display the generated graph in a webserver.
 
+[Using graphviz as a library](https://graphviz.org/docs/library/)
+
 We want to install it as a static lib, we will then link this to the project and use it!
 
 In a folder somewhere download the tar for the release, unpackage it, configure, then make, then insall (put the resulting lib & binaries somewhere).
