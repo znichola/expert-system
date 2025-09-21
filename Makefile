@@ -32,7 +32,7 @@ OBJS	= $(addprefix $(OBJS_PATH), $(addsuffix .o, $(FILES)))
 
 GV_PREFIX = $(HOME)/graphviz
 GV_INCLUDE = $(GV_PREFIX)/include
-GV_LIBS = -L$(GV_PREFIX)/lib -lgvc -lcgraph -lcdt -Wl,-rpath,/home/znichola/graphviz/lib
+GV_LIBS = -L$(GV_PREFIX)/lib -lgvc -lcgraph -lcdt -Wl,-rpath,$(GV_PREFIX)/lib
 
 
 all	: $(NAME)
