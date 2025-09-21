@@ -25,35 +25,21 @@ MAIN_OBJ	= objs/main.o
 
 OBJS_PATH = objs/
 SRCS_PATH = srcs/
-INCS_PATH = -Iincludes/.
+INCS_PATH = includes
 
 SRCS	= $(addprefix $(SRCS_PATH), $(addsuffix .cpp, $(FILES)))
 OBJS	= $(addprefix $(OBJS_PATH), $(addsuffix .o, $(FILES)))
 
-
-
-GV_PLUGIN_DIR = $(HOME)/graphviz-static/lib/graphviz
-
-GV_PLUGINS = \
-    $(GV_PLUGIN_DIR)/libgvplugin_core.a \
-    $(GV_PLUGIN_DIR)/libgvplugin_dot_layout.a \
-    $(GV_PLUGIN_DIR)/libgvplugin_neato_layout.a \
-    $(GV_PLUGIN_DIR)/libgvplugin_pango.a \
-    $(GV_PLUGIN_DIR)/libgvplugin_gdk.a \
-    $(GV_PLUGIN_DIR)/libgvplugin_kitty.a \
-    $(GV_PLUGIN_DIR)/libgvplugin_xlib.a \
-    $(GV_PLUGIN_DIR)/libgvplugin_vt.a
-
-GV_LIBS = -L$(HOME)/graphviz-static/lib \
-    -lgvc -lcgraph -lcdt -lxdot -lpathplan -lgvpr -lz -lm -lpng -lexpat \
-    $(GV_PLUGINS)
+GV_PREFIX = $(HOME)/graphviz
+GV_INCLUDE = $(GV_PREFIX)/include
+GV_LIBS = -L$(GV_PREFIX)/lib -lgvc -lcgraph -lcdt -Wl,-rpath,/home/znichola/graphviz/lib
 
 
 all	: $(NAME)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $(INCS_PATH) -o $@ $<
+	$(CC) $(CFLAGS) -c -I$(INCS_PATH) -I$(GV_INCLUDE) -o $@ $<
 
 $(NAME)	: $(OBJS) $(MAIN_OBJ)
 	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) $(GV_LIBS) -o $@
@@ -74,6 +60,19 @@ leaks : re
 run : all
 	$(LEAKS_CHECK) ./$(NAME) $(EXAMPLE_FILE)
 
+external_deps/graphviz-13.1.2 :
+	mkdir -p external_deps
+	cd external_deps && \
+	wget https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/13.1.2/graphviz-13.1.2.tar.gz && \
+	tar -xf graphviz-13.1.2.tar.gz && \
+	rm graphviz-13.1.2.tar.gz
+
+graphviz:
+	cd external_deps/graphviz-13.1.2 && \
+	./configure --prefix=$(GV_PREFIX) \
+	&& \
+	make && \
+	make install
 
 # Rule to archive object files into a static library.
 # Useful for testing
