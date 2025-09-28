@@ -5,7 +5,7 @@
 
 class WebServer {
 public:
-    using Handler = std::function<std::string(const std::string& body)>;
+    using Handler = std::function<std::string(const std::string& queryString)>;
 
     WebServer(int port = 8080);
     ~WebServer();
@@ -23,8 +23,8 @@ private:
     // Route maps for GET
     std::unordered_map<std::string, Handler> get_routes;
 
-    std::string parse_path(const std::string& request);
-    std::string parse_method(const std::string& request);
-    std::string parse_body(const std::string& request);
-    std::string read_request(int client);
+    std::string parsePath(const std::string& request) const;
+    std::string parseQueryString(const std::string& request) const;
+    std::string parseMethod(const std::string& request) const;
+    std::string readFullFequest(int client);
 };
