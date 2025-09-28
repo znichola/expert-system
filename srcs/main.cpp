@@ -175,6 +175,7 @@ std::string getInputOrErrorExit(const InputOptions &opts) {
 bool isServerLaunch(const InputOptions &opts) {
     if (!opts.isServer)
         return false;
-    launchGraphvisServer();
+    WebServer webServer(7711);
+    webServer.start(); // blocks on the server
     return true;
 }
