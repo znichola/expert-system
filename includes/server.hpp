@@ -11,7 +11,7 @@ public:
     ~WebServer();
 
     // Register routes
-    void get(const std::string& path, Handler handler);
+    void registerGetRoutes();
 
     // Start the server (blocking)
     void start();
@@ -30,4 +30,9 @@ private:
     std::string parseMethod(const std::string& request) const;
     std::string readFullFequest(int client);
     std::string constructHTMLResponse(Status status, const std::string& body) const;
+ 
+    class Route {
+        std::string path;
+        Handler handler;
+    };
 };
