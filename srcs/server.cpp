@@ -8,6 +8,8 @@
 
 #include "server.hpp"
 
+std::string urlDecode(const std::string &src);
+
 WebServer* g_server = nullptr;
 bool running = true;
 
@@ -34,14 +36,44 @@ WebServer::WebServer(int port) {
     if (listen(server_fd, 10) < 0) { perror("listen"); exit(1); }
 
     std::cout << "Server listening on port " << port << "...\n";
+
+    registerGetRoutes();
 }
 
 WebServer::~WebServer() {
     if (server_fd != -1 && close(server_fd) != 0) perror("destructor close");
 }
 
-void WebServer::get(const std::string& path, Handler handler) {
-    get_routes[path] = handler;
+void WebServer::registerGetRoutes() {
+    get_routes["/"] = [this](std::string queryParam) -> std::string {
+        (void)queryParam;
+        std::ostringstream body;
+        body << "<h1>Expert System</h1>\n"
+        << "<p>Enter your ruleset here</p>\n"
+        << "<form action=\"evaluate\" method=\"get\">\n"
+        << "    <textarea name=\"rules\" placeholder=\"Paste your ruleset here...\"></textarea><br>\n"
+        << "    <button type=\"submit\">Submit</button>\n"
+        << "</form>\n";
+        return constructHTMLResponse(Status::OK, body.str());
+    };
+
+    get_routes["/evaluate"] = [this](std::string queryParam) -> std::string {
+        std::string rules;
+        std::string key = "rules=";
+        size_t pos = queryParam.find(key);
+        if (pos != std::string::npos) {
+            rules = urlDecode(queryParam.substr(pos + key.length()));
+        } else {
+            rules = "No rules submitted.";
+        }
+
+        std::ostringstream body;
+        body << "<h1>Submitted Ruleset</h1>\n"
+            << "<pre style=\"text-align: left;\">" << rules << "</pre>\n"
+            << "<a href=\"/\">Back</a>\n";
+
+        return constructHTMLResponse(Status::OK, body.str());
+    };
 }
 
 std::string WebServer::parsePath(const std::string& request) const {
@@ -81,16 +113,22 @@ std::string WebServer::constructHTMLResponse(Status status, const std::string& b
 
     std::string htmlBody = body.empty() ? defaultBody() : body;
 
+// #748873
+// #D1A980
+// #E5E0D8
+// #F8F8F8
+
     std::ostringstream fullHtml;
     fullHtml << "<!DOCTYPE html>\n"
              << "<html lang=\"en\">\n"
              << "<head>\n"
              << "  <meta charset=\"UTF-8\">\n"
              << "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-             << "  <title>WebServer Response</title>\n"
+             << "  <title>Expert System</title>\n"
              << "  <style>\n"
-             << "    body { font-family: sans-serif; margin: 2em; text-align: center; }\n"
-             << "    h1 { color: #333; }\n"
+             << "    body { font-family: sans-serif; margin: 2em; text-align: center; color: #748873; background-color: #E5E0D8}\n"
+             << "    textarea { width: 90%; height: 200px; margin: 1em 0; font-family: monospace; }\n"
+             << "    button { padding: 0.5em 1.5em; font-size: 1em; cursor: pointer; }\n"
              << "  </style>\n"
              << "</head>\n"
              << "<body>\n"
@@ -127,7 +165,7 @@ void WebServer::start() {
                 std::string path = parsePath(request);
                 std::string queryString = parseQueryString(request);
 
-                std::cout   << "\nREQUEST\nmethod: {" <<  method
+                std::cout   << "\nREQUEST\nmethod: {" << method
                             << "}\npath: {" << path
                             << "}\nqueryStrings: {"<< queryString
                             << "}\nrequst {\n" << request << "}\n";
@@ -175,6 +213,25 @@ std::string WebServer::readFullFequest(int client) {
     }
 
     return request;
+}
+
+std::string urlDecode(const std::string &src) {
+    std::string result;
+    result.reserve(src.size());
+    for (size_t i = 0; i < src.size(); i++) {
+        if (src[i] == '+') {
+            result.push_back(' ');
+        } else if (src[i] == '%' && i + 2 < src.size() &&
+                   std::isxdigit(src[i + 1]) && std::isxdigit(src[i + 2])) {
+            std::string hex = src.substr(i + 1, 2);
+            char decoded = static_cast<char>(std::stoi(hex, nullptr, 16));
+            result.push_back(decoded);
+            i += 2;
+        } else {
+            result.push_back(src[i]);
+        }
+    }
+    return result;
 }
 
 
