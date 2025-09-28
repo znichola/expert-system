@@ -20,6 +20,8 @@ public:
 private:
     int server_fd;
 
+    enum class Status { OK=200, NOT_FOUND=404, SERVER_ERROR=500 };
+    
     // Route maps for GET
     std::unordered_map<std::string, Handler> get_routes;
 
@@ -27,4 +29,5 @@ private:
     std::string parseQueryString(const std::string& request) const;
     std::string parseMethod(const std::string& request) const;
     std::string readFullFequest(int client);
+    std::string constructHTMLResponse(Status status, const std::string& body) const;
 };

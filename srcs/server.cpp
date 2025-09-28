@@ -65,6 +65,51 @@ std::string WebServer::parseMethod(const std::string& request) const {
     return request.substr(0, end);
 }
 
+std::string WebServer::constructHTMLResponse(Status status, const std::string& body="") const {
+    auto defaultBody = [status]() -> std::string {
+        switch (status) {
+            case Status::OK:
+                return "<h1>200 OK</h1>";
+            case Status::NOT_FOUND:
+                return "<h1>404 Not Found</h1>";
+            case Status::SERVER_ERROR:
+                return "<h1>500 Internal Server Error</h1>";
+            default:
+                return "<h1>Unknown Status<h1>";
+        }
+    };
+
+    std::string htmlBody = body.empty() ? defaultBody() : body;
+
+    std::ostringstream fullHtml;
+    fullHtml << "<!DOCTYPE html>\n"
+             << "<html lang=\"en\">\n"
+             << "<head>\n"
+             << "  <meta charset=\"UTF-8\">\n"
+             << "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+             << "  <title>WebServer Response</title>\n"
+             << "  <style>\n"
+             << "    body { font-family: sans-serif; margin: 2em; text-align: center; }\n"
+             << "    h1 { color: #333; }\n"
+             << "  </style>\n"
+             << "</head>\n"
+             << "<body>\n"
+             << htmlBody << "\n"
+             << "</body>\n"
+             << "</html>";
+
+    std::string responseBody = fullHtml.str();
+    
+    std::ostringstream response;
+        response << "HTTP/1.1 " << static_cast<std::underlying_type<Status>::type>(status) << "\r\n"
+                << "Content-Type: text/html; charset=UTF-8\r\n"
+                << "Connection : close\r\n"
+                << "Content-Length: " << responseBody.size() << "\r\n"
+                << "\r\n"
+                << responseBody;
+    return response.str();
+}
+
 void WebServer::start() {
     g_server = this;
     std::signal(SIGINT, handleSigint);
@@ -82,23 +127,17 @@ void WebServer::start() {
                 std::string path = parsePath(request);
                 std::string queryString = parseQueryString(request);
 
-                std::cout << "\nREQUEST\nmethod: {" <<  method << "}\npath: {" << path << "}\nqueryStrings: {" << queryString << "}\n" << "requst {\n" << request << "}\n";
+                std::cout   << "\nREQUEST\nmethod: {" <<  method
+                            << "}\npath: {" << path
+                            << "}\nqueryStrings: {"<< queryString
+                            << "}\nrequst {\n" << request << "}\n";
 
-                std::string response_body = "404 Not Found";
+                std::string response = constructHTMLResponse(Status::NOT_FOUND);
 
                 if (method == "GET" && get_routes.find(path) != get_routes.end())
-                    response_body = get_routes[path](queryString);
+                    response = get_routes[path](queryString);
 
-                std::ostringstream response;
-                response << "HTTP/1.1 200 OK\r\n"
-                         << "Content-Type: text/plain\r\n"
-                         << "Connection : close\r\n"
-                         << "Content-Length: " << response_body.size() << "\r\n"
-                         << "\r\n"
-                         << response_body;
-
-                std::string res = response.str();
-                send(client, res.c_str(), res.size(), 0);
+                send(client, response.c_str(), response.size(), 0);
             }
             close(client);
     }
