@@ -167,12 +167,12 @@ struct Digraph {
     std::vector<char> trueFacts() const;
 
     // These two functions are mutually recursive
-    Fact::State solveForFact(const char fact_id);
-    Fact::State solveRule(const std::string &rule_id);
+    Fact::State solveForFact(const char fact_id, bool isExplain = false);
+    Fact::State solveRule(const std::string &rule_id, bool isExplain = false);
 
     void setExprVarsToState(const Expr &expr, const Fact::State state);
 
-    Fact::State solveExpr(const Expr &expr);
+    Fact::State solveExpr(const Expr &expr, bool isExplain = false);
 
 };
 
@@ -182,7 +182,8 @@ inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
 
 Digraph makeDigraph(
         const std::vector<Fact> &facts,
-        const std::vector<Rule> &rules);
+        const std::vector<Rule> &rules
+    );
 
 
 

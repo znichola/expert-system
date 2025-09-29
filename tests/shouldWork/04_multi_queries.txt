@@ -11,5 +11,5 @@ L + U + E => M  # if X explains Life, the universe and everthing, then X is mean
 =A # 42 is the answer
 
 # Query
-?U # is 42 meaningful ?
-#U is True
+?LUE # is 42 meaningful ?
+#LUE is True

@@ -44,23 +44,23 @@ int main() {
 
     std::vector<Test> tests = {
         {
-            "A=>B\n=A\n?B",
+            "A=>B#hello\n=A\n?B",
             { {'B', Fact::State::True} }
         },
         {
-            "!A=>B\n=A\n?B",
+            "!A=>B#hello\n=A\n?B",
             { {'B', Fact::State::False} }
         },
         {
-            "A|B=>C\n=A\n?C",
+            "A|B=>C#hello\n=A\n?C",
             { {'C', Fact::State::True} }
         },
         {
-            "A|B=>C\n=B\n?C",
+            "A|B=>C#hello\n=B\n?C",
             { {'C', Fact::State::True} }
         },
         {
-            "C+E=>F\nH+S=>K\nF=>G\nK=>Y\n=CE\n?G",
+            "C+E=>F#hello\nH+S=>K\nF=>G\nK=>Y\n=CE\n?G",
             { {'G', Fact::State::True} }
         }
     };

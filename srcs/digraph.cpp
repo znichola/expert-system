@@ -173,7 +173,7 @@ void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
     // else throw not handled yet
 }
 
-Fact::State Digraph::solveForFact(const char fact_id) {
+Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
     auto f = facts.find(fact_id);
 
     if (f == facts.end()){
@@ -183,29 +183,34 @@ Fact::State Digraph::solveForFact(const char fact_id) {
     Fact &fact(f->second);
 
     for (const auto &r : fact.consequent_rules) {
-        std::cout << "solveForFact " << fact_id << ": solving " << r << std::endl;
-        solveRule(r);
+        if (isExplain) {
+            std::cout << "solveForFact " << fact_id << ": solving " << r << std::endl;
+        }
+        solveRule(r, isExplain);
     }
 
     return fact.state;
 }
 
 
-Fact::State Digraph::solveRule(const std::string &rule_id) {
+Fact::State Digraph::solveRule(const std::string &rule_id, bool isExplain) {
     auto r = rules.find(rule_id);
     if (r == rules.end()) {
         throw std::runtime_error("Rule not found!");
     }
 
     Rule &rule(r->second);
-    auto res = solveExpr(rule.expr);
-    std::cout << "solveRule " << rule_id << ": result " << res << std::endl;
+    auto res = solveExpr(rule.expr, isExplain);
+    if (isExplain) {
+        std::cout << "solveRule " << rule_id << ": result " << res << std::endl;
+    }
     return res;
 }
 
-Fact::State Digraph::solveExpr(const Expr &expr) {
+Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
     struct Solver {
         Digraph &digraph;
+        bool isExplain;
 
         Fact::State operator()(const Empty &)
             {return Fact::State::Undetermined;}
@@ -217,20 +222,24 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
                 throw std::runtime_error("Fact not found in digraph!");
             }
 
-            std::cout << "IN Var " << v << " "  << it->second.state << std::endl;
+            if (isExplain) {
+                std::cout << "IN Var " << v << " "  << it->second.state << std::endl;
+            }
 
             if (it->second.state == Fact::State::Undetermined) {
                 // if state is undefined, it needs to be solved for!
                 // leave it for now, afraid of infinite recursion
                 // Fact::State res = std::visit(*this, digraph.rules[0].expr);
-                digraph.solveForFact(it->second.id);
+                digraph.solveForFact(it->second.id, isExplain);
             }
             return it->second.state;
         }
 
         Fact::State operator()(const Not &n)
         {
-            std::cout << "IN Not" << n << std::endl;
+            if (isExplain) {
+                std::cout << "IN Not" << n << std::endl;
+            }
             return visit(*this, n.child()) == Fact::State::True
                 ? Fact::State::False
                 : visit(*this, n.child()) == Fact::State::False
@@ -240,7 +249,9 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
 
         Fact::State operator()(const And &n)
         {
-            std::cout << "IN And " << n << std::endl;
+            if (isExplain) {
+                std::cout << "IN And " << n << std::endl;
+            }
             Fact::State lhs = visit(*this, n.lhs());
             Fact::State rhs = visit(*this, n.rhs());
             if (lhs == Fact::State::False || rhs == Fact::State::False) {
@@ -254,7 +265,9 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
 
         Fact::State operator()(const Or &n)
         {
-            std::cout << "IN Or " << n << std::endl;
+            if (isExplain) {
+                std::cout << "IN Or " << n << std::endl;
+            }
             Fact::State lhs = visit(*this, n.lhs());
             Fact::State rhs = visit(*this, n.rhs());
             if (lhs == Fact::State::True || rhs == Fact::State::True) {
@@ -268,7 +281,9 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
 
         Fact::State operator()(const Xor &n)
         {
-            std::cout << "IN Xor " << n << std::endl;
+            if (isExplain) {
+                std::cout << "IN Xor " << n << std::endl;
+            }
             Fact::State lhs = visit(*this, n.lhs());
             Fact::State rhs = visit(*this, n.rhs());
             if (lhs == Fact::State::Undetermined || rhs == Fact::State::Undetermined) {
@@ -283,7 +298,9 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
         // (A ⇒ B) ⇔ (¬A ∨ B)
         Fact::State operator()(const Imply &n)
         {
-            std::cout << "IN Imply " << n << std::endl;
+            if (isExplain) {
+                std::cout << "IN Imply " << n << std::endl;
+            }
             Expr lhs_real = n.lhs();
             Expr rhs_real = n.rhs();
 
@@ -292,14 +309,20 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
             // Fact::State rhs_result = visit(*this, n.rhs());
             //(void)rhs_result;
             if (lhs_result == Fact::State::Undetermined) {
-                std::cout << "Rule" << n <<  "resolution is undetermined\n";
+                if (isExplain) {
+                    std::cout << "Rule" << n <<  "resolution is undetermined\n";
+                }
                 return Fact::State::Undetermined;
             }
-            std::cout << "Setting " << rhs_real << " to " << lhs_result << "\n";
+            if (isExplain) {
+                std::cout << "Setting " << rhs_real << " to " << lhs_result << "\n";
+            }
 
             digraph.setExprVarsToState(rhs_real, lhs_result);
 
-            std::cout << "Solving Imply" << std::endl;
+            if (isExplain) {
+                std::cout << "Solving Imply" << std::endl;
+            }
 
             auto res = visit(*this, Expr(Or(Not(lhs_real), rhs_real)));
 
@@ -328,13 +351,14 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
             return visit(*this, both);
         }
     };
-    return std::visit(Solver{*this}, expr);
+    return std::visit(Solver{*this, isExplain}, expr);
 }
 
 
 Digraph makeDigraph(
         const std::vector<Fact> &facts,
-        const std::vector<Rule> &rules) {
+        const std::vector<Rule> &rules
+    ) {
     Digraph g;
 
     for (const auto &f : facts) {

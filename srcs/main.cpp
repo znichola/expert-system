@@ -4,12 +4,15 @@
 #include <string>
 
 #include "expert-system.hpp"
+#include "parser.hpp"
 #include "server.hpp"
 
 struct InputOptions {
     bool isHelp = false;
     char *file = nullptr;
     bool isServer = false;
+    bool isExplain = false;
+    bool isDot = false;
 };
 
 
@@ -29,10 +32,32 @@ int main(int argc, char ** argv) {
 
     if (isServerLaunch(opts))
         return 0;
-
-    std::string input = getInputOrErrorExit(opts);
-
+    std::string input;
+    try {
+        input = getInputOrErrorExit(opts);
+        if (input.empty())
+        {
+            std::cerr << "No input provided, exiting." << std::endl;
+            return 1;
+        }
+    } catch (std::exception &e) {
+        std::cerr << "Startup error | " << e.what() << std::endl;
+        return 1;
+    }
     // MAIN ENTRY POINT
+    try {
+        std::vector<Token> tokens = tokenizer(input);
+        auto [rules, facts, queries] = parseTokens(tokens);
+        Digraph digraph = makeDigraph(facts, rules);
+
+        for (const auto &query : queries) {
+            auto res = digraph.solveForFact(query.label, opts.isExplain);
+            std::cout << query.label << " is " << res << std::endl;
+        }
+    } catch (std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
 
     return 0;
 }
@@ -47,6 +72,10 @@ InputOptions parseInput(int ac, char **av) {
             res.isHelp = true;
         if (s == "--server" || s == "-s")
             res.isServer = true;
+        if (s == "--explain" || s == "-e")
+            res.isExplain = true;
+        if (s == "--dot" || s == "-d")
+            res.isDot = true;
         else
             res.file = av[i];
     }

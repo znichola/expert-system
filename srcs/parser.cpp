@@ -7,6 +7,17 @@
 
 std::tuple<size_t, vector<Token>, string> getNextLine(const vector<Token> &tokens, size_t index);
 
+
+/*
+** parseTokens implementation
+** ----------------------------
+** This function takes a vector of Token structs and returns a tuple containing:
+** - A vector of Rule structs
+** - A vector of Fact structs
+** - A vector of Query structs
+** It processes the tokens to identify rules, facts, and queries based on their types and line numbers.
+** It throws exceptions for syntax errors, such as missing facts or queries.
+*/
 std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
     parseTokens(const vector<Token> &input) {
     // take the list of tokens, split into lines then keep the comments to one side, and 
@@ -39,6 +50,8 @@ std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
                 rules.push_back(Rule(expr, lineTokens[0].line_number, comment));
             } catch (const std::exception &e) {
                 std::cerr << "Line: " << lineTokens[0].line_number << " :" << e.what() << std::endl;
+                //! TODO for now just exit, later we might want to ask the user if they want to change the input
+                exit(1);
             }
         }
     }
