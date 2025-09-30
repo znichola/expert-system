@@ -86,6 +86,7 @@ InputOptions parseInput(int ac, char **av) {
 std::string getStdInput() {
     std::string ret;
     std::string buff;
+    std::cout << "Enter your input (end with ';;' on a new line):" << std::endl;
     while (std::getline(std::cin, buff)) {
         auto pos = buff.find(";;");
         if (pos == std::string::npos)

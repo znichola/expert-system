@@ -9,7 +9,7 @@
 # include <string>
 # include <stdexcept>
 # include <unordered_map>
-
+# include <set>
 # include "expression.hpp"
 
 using std::string;
@@ -155,6 +155,7 @@ struct Digraph {
 
     FactsMap facts;
     RulesMap rules;
+    std::set<char> solving_stack; // Add this for cycle detection
 //    FactMap  questFacts; // facts for which a search is already launched
 
     void addFact(const Fact &fact);

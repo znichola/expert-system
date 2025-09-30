@@ -106,6 +106,7 @@ void Digraph::addRule(const Rule &rule) {
         throw std::runtime_error("Duplicate rule");
     }
 
+    // TODO change to accept complicated rules in conclusion
     if (!rule.expr.isValidRule()) {
         throw std::runtime_error("Invalid rule");
     }
@@ -208,12 +209,27 @@ Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
 
     Fact &fact(f->second);
 
+    // Check for cycle
+    if (solving_stack.find(fact_id) != solving_stack.end()) {
+        if (isExplain) {
+            std::cout << "Cycle detected for fact " << fact_id << ", setting to False" << std::endl;
+        }
+        fact.state = Fact::State::False;
+        return fact.state;
+    }
+
+    // Add to solving stack
+    solving_stack.insert(fact_id);
+
     for (const auto &r : fact.consequent_rules) {
         if (isExplain) {
             std::cout << "solveForFact " << fact_id << ": solving " << r << std::endl;
         }
         solveRule(r, isExplain);
     }
+
+    // Remove from solving stack
+    solving_stack.erase(fact_id);
 
     return fact.state;
 }
@@ -253,9 +269,6 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
             }
 
             if (it->second.state == Fact::State::Undetermined) {
-                // if state is undefined, it needs to be solved for!
-                // leave it for now, afraid of infinite recursion
-                // Fact::State res = std::visit(*this, digraph.rules[0].expr);
                 digraph.solveForFact(it->second.id, isExplain);
             }
             return it->second.state;
