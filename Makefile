@@ -4,6 +4,7 @@ CC		= clang++
 CFLAGS	= -Wall -Wextra
 CFLAGS	+= -Werror
 CFLAGS	+= -std=c++20 #-pedantic
+CFLAGS	+=  -g3 -O0
 
 ifdef DEBUG
 CFLAGS	+= -g3 -fsanitize=address

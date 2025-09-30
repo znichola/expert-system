@@ -110,7 +110,24 @@ void Digraph::addRule(const Rule &rule) {
         throw std::runtime_error("Invalid rule");
     }
 
+    // Check if this is an Iff expression
+    if (auto iff = std::get_if<Iff>(&rule.expr)) {
+        // For A <=> B, create two rules: A => B and B => A
+        Expr forward_rule = Imply(iff->lhs(), iff->rhs());
+        Expr backward_rule = Imply(iff->rhs(), iff->lhs());
+        
+        // Create and add the forward rule (A => B)
+        Rule forward_r(forward_rule, rule.line_number, rule.comment + " (forward)");
+        addRule(forward_r);
+        
+        // Create and add the backward rule (B => A)  
+        Rule backward_r(backward_rule, rule.line_number, rule.comment + " (backward)");
+        addRule(backward_r);
+        
+        return;
+    }
 
+    // Handle normal rules (non-Iff)
     auto g = rule.expr.getValues();
 
     if(g.lhs && g.rhs) {
@@ -136,12 +153,10 @@ void Digraph::addRule(const Rule &rule) {
         throw std::runtime_error("Illegal state, rules must have lhs, rhs");
     }
 
-    // TODO : handel if-and-only-if which adds a second rule with terms flipped
     return;
 }
 
 void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
-
     if (auto v = std::get_if<Var>(&expr)) {
         auto it = facts.find(v->value());
         if (it == facts.end()) {
@@ -153,16 +168,27 @@ void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
             fact.state = state;
         } else if (state != fact.state) {
             std::stringstream ss;
-            ss << "Contradiciton: Cannont set fact " << fact << " to "
+            ss << "Contradiciton: Can't set fact " << fact << " to "
                << state << " it's already " << fact.state;
             throw std::runtime_error(ss.str());
-        } else {
-            std::cout
-            << "No point in setting expr to Undetermined, it is by default\n";
-        }
+        } 
+        
+        // TODO should we allow setting to Undetermined? 
+        // else {
+        //     std::cout
+        //     << "No point in setting expr to Undetermined, it is by default\n";
+        // }
         return ;
     }
-
+    else if (auto n = std::get_if<Not>(&expr)) {
+        setExprVarsToState(n->child(), state == Fact::State::True
+                ? Fact::State::False
+                : state == Fact::State::False
+                    ? Fact::State::True
+                    : Fact::State::Undetermined);
+        return ;
+    }
+    
     throw std::runtime_error("Set facts not handled for this expr "
             + expr.toString());
 
@@ -301,54 +327,52 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
             if (isExplain) {
                 std::cout << "IN Imply " << n << std::endl;
             }
+            
             Expr lhs_real = n.lhs();
             Expr rhs_real = n.rhs();
-
-            Fact::State lhs_result = visit(*this, n.lhs());
-            // visiting rhs will lead to infinate recursion
-            // Fact::State rhs_result = visit(*this, n.rhs());
-            //(void)rhs_result;
-            if (lhs_result == Fact::State::Undetermined) {
+            Fact::State lhs_result = visit(*this, lhs_real);
+            
+            if (isExplain) {
+                std::cout << "Imply: LHS (" << lhs_real << ") = " << lhs_result << std::endl;
+            }
+            
+            // If antecedent is True, consequent must be True
+            if (lhs_result == Fact::State::True) {
                 if (isExplain) {
-                    std::cout << "Rule" << n <<  "resolution is undetermined\n";
+                    std::cout << "Setting " << rhs_real << " to True (antecedent is True)" << std::endl;
                 }
-                return Fact::State::Undetermined;
+                digraph.setExprVarsToState(rhs_real, Fact::State::True);
+                return Fact::State::True;
             }
-            if (isExplain) {
-                std::cout << "Setting " << rhs_real << " to " << lhs_result << "\n";
+            
+            // If antecedent is False, implication is True (vacuously true)
+            if (lhs_result == Fact::State::False) {
+                return Fact::State::True;
             }
-
-            digraph.setExprVarsToState(rhs_real, lhs_result);
-
-            if (isExplain) {
-                std::cout << "Solving Imply" << std::endl;
-            }
-
-            auto res = visit(*this, Expr(Or(Not(lhs_real), rhs_real)));
-
-            if (res == Fact::State::False) {
-                throw std::runtime_error("Contradiction, Rule "
-                        + Expr(n).toString() + " resolved to false\n");
-            }
-            return res;
+            
+            // If antecedent is Undetermined, we can't conclude anything
+            return Fact::State::Undetermined;
         }
 
         // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
         Fact::State operator()(const Iff &n)
         {
+            if (isExplain) {
             std::cout << "IN Iff " << n << std::endl;
+            }
+        
+            // Get the actual operands from the Iff expression
             Expr lhs_real = n.lhs();
             Expr rhs_real = n.rhs();
-
-            Fact::State lhs_result = visit(*this, n.lhs());
-            Fact::State rhs_result = visit(*this, n.rhs());
-            if (lhs_result == Fact::State::Undetermined || rhs_result == Fact::State::Undetermined) {
-                return Fact::State::Undetermined;
-            }
-            lhs_real = Imply(lhs_real, rhs_real);
-            rhs_real = Imply(rhs_real, lhs_real);
-            Expr both = And(lhs_real, rhs_real);
-            return visit(*this, both);
+            
+            // Create the two implications: (A ⇒ B) and (B ⇒ A)
+            Expr forward_imply = Imply(lhs_real, rhs_real);
+            Expr backward_imply = Imply(rhs_real, lhs_real);
+            
+            // Combine them with AND: ((A ⇒ B) ∧ (B ⇒ A))
+            Expr both = And(forward_imply, backward_imply);
+            
+                return visit(*this, both);
         }
     };
     return std::visit(Solver{*this, isExplain}, expr);

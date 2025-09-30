@@ -1,90 +1,70 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
 #include "expert-system.hpp"
+#include "parser.hpp"
 
-std::string getStdInput();
-std::string getFileInput(char *fileName);
-struct InputOptions {
-    bool isHelp = false;
-    char *file = nullptr;
+#define GREEN   "\033[32m"
+#define RED     "\033[31m"
+#define RESET   "\033[0m"
+
+using std::cout;
+using std::endl;
+
+// Struct for a single test case
+struct Test {
+    std::string ruleSet;                             // input rules/facts/queries
+    std::vector<std::string> expected;  // expected results for queries
 };
 
-InputOptions parseInput(int ac, char **av) {
-    InputOptions res;
-
-    for (int i = 1; i < ac; i++) {
-        std::string s(av[i]);
-        if (s == "--help" || s == "-h")
-            res.isHelp = true;
-        else
-            res.file = av[i];
+// This test will only test the tokenizer, not the solver
+// it will compare the output of the tokenizer to the expected output
+// Helper to run one test
+void runTest(const Test &t) {
+    bool all_ok = true;
+    cout << "Running test with ruleset:\n" << t.ruleSet << endl;
+    
+    auto tokens = tokenizer(t.ruleSet);
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (i >= t.expected.size() || tokens[i].token_list != t.expected[i]) {
+            cout << RED << "KO " << RESET << tokens[i].token_list << endl;
+            if (i < t.expected.size()) {
+                cout << "  Expected: " << t.expected[i] << endl;
+            } else {
+                cout << "  Expected: <no token>" << endl;
+            }
+            all_ok = false;
+        }
     }
-    return res;
+    if (tokens.size() == t.expected.size() && all_ok) {
+        cout << GREEN << "OK" << RESET << endl;
+    } else if (tokens.size() != t.expected.size()) {
+        cout << RED << "KO " << RESET << "Number of tokens mismatch" << endl;
+        cout << "  Expected: " << t.expected.size() << endl;
+        cout << "  Got:      " << tokens.size() << endl;
+    }
+    else if (all_ok) {
+        cout << GREEN << "OK" << RESET << endl;
+    }
+    else {
+        cout << RED << "KO" << RESET << endl;
+    }
+
+    cout << "--------------------------------------\n";
 }
 
+int main() {
+    cout << "Testing solver" << endl;
 
-std::string getStdInput() {
-    std::string ret;
-    std::string buff;
-    while (std::getline(std::cin, buff)) {
-        auto pos = buff.find(";;");
-        if (pos == std::string::npos)
-            ret += buff + "\n";
-        else {
-            ret += buff.substr(0, pos);
-            break ;
+    std::vector<Test> tests = {
+        {
+            "A=>!B#hello\n=A\n?B",
+            { "A","=>", "!", "B", "#hello", "\n", "=", "A", "\n", "?", "B" }
+        },
+        {
+            "!A<=>B|C^(N+!G)#hello\n=A\n?B",
+            { "!", "A", "<=>", "B", "|", "C", "^", "(", "N", "+", "!", "G", ")", "#hello", "\n", "=", "A", "\n", "?", "B" }
         }
-    }
-    return ret;
-}
+    };
 
-
-std::string getFileInput(char *fileName) {
-    std::ifstream file(fileName);
-    if (!file) throw std::runtime_error("Cannot open file \"" 
-            + std::string(fileName) + "\"");
-    std::ostringstream ss;
-    ss << file.rdbuf();
-    return ss.str();
-}
-
-int main(int argc, char ** argv) {
-    std::cout << "Tokenizing tests" << std::endl; 
-    std::string input;
-    InputOptions opts = parseInput(argc, argv);
-    if (argc == 1)
-    {
-        try {
-            std::string t = "./tokenizerTest/test.txt";
-            input = getFileInput(const_cast<char*>(t.c_str()));
-        } catch (std::exception &e) {
-            std::cerr << "Error reading default file | " << e.what() << std::endl;
-            return 1;
-        }
-    }
-    else
-    {
-        try {
-            input = opts.file == nullptr ? getStdInput() : getFileInput(opts.file);
-        } catch (std::exception &e) {
-            std::cerr << "Startup error | " << e.what() << std::endl;
-            return 1;
-        }
-    }
-    // printf("Input:\n%s\n", input.c_str());
-    try {
-        vector<Token> tokens = tokenizer(input);
-        vector<Fact> facts = parseFacts(tokens);
-        // for (const auto &t : tokens.token_list) {
-        //     std::cout << "[" << t.second << "] '" << t.first << "'" << std::endl;
-        // }
-        for (const auto &f : facts) {
-            std::cout << f.toString() << " in line "<< f.line_number << " with comment " << f.comment <<std::endl;
-        }
-    } catch (std::exception &e) {
-        std::cerr << "Tokenizing error | " << e.what() << std::endl;
-        return 1;
+    for (const auto &t : tests) {
+        runTest(t);
     }
 }

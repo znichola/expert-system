@@ -56,7 +56,7 @@ int main() {
     test("((A+B)+C)");
     test("((A|B)+(C^D))");
     test("(((A|B)+(C^D))=>E)");
-    test("(A=>B)");
+    test("(A=>!B)");
     test("((A=>B)=>(C=>D))");
     test("((A=>B)<=>C)");
     test("((A+B)=>(!C|D))");
