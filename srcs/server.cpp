@@ -6,9 +6,12 @@
 
 #include <graphviz/gvc.h>
 
+#include "expert-system.hpp"
+#include "parser.hpp"
 #include "server.hpp"
 
-std::string urlDecode(const std::string &src);
+static std::string urlDecode(const std::string &src);
+static std::string base64_encode(const std::string &in);
 
 WebServer* g_server = nullptr;
 bool running = true;
@@ -51,8 +54,9 @@ void WebServer::registerGetRoutes() {
         body << "<h1>Expert System</h1>\n"
         << "<p>Enter your ruleset here</p>\n"
         << "<form action=\"evaluate\" method=\"get\">\n"
-        << "    <textarea name=\"rules\" placeholder=\"Paste your ruleset here...\"></textarea><br>\n"
+        << "    <textarea name=\"rules\" placeholder=\"Enter your ruleset here...\"></textarea><br>\n"
         << "    <button type=\"submit\">Submit</button>\n"
+// <img alt=\"My Image\" src=\"data:image/gif;base64,this is how we add the graph image to the single html page, no internal server state!"/>"
         << "</form>\n";
         return constructHTMLResponse(Status::OK, body.str());
     };
@@ -64,12 +68,32 @@ void WebServer::registerGetRoutes() {
         if (pos != std::string::npos) {
             rules = urlDecode(queryParam.substr(pos + key.length()));
         } else {
-            rules = "No rules submitted.";
+            rules = "# No rules submitted.";
         }
 
+        std::ostringstream conclusion;
+
+        try {
+            std::vector<Token> tokens = tokenizer(rules);
+            auto [rules, facts, queries] = parseTokens(tokens);
+            Digraph digraph = makeDigraph(facts, rules);
+
+            for (const auto &query : queries) {
+                auto res = digraph.solveForFact(query.label, false);
+                conclusion << query.label << " is " << res << std::endl;
+            }
+        } catch (std::exception &e) {
+            conclusion << "Error: " << e.what() << std::endl;
+        }
+
+        (void)base64_encode("foobar");
+
         std::ostringstream body;
-        body << "<h1>Submitted Ruleset</h1>\n"
-            << "<pre style=\"text-align: left;\">" << rules << "</pre>\n"
+        body << "<h1>Evaluation</h1>\n"
+            << "<p>Submitted rules</p>\n"
+            << "<pre>" << rules << "</pre>\n"
+            << "<p>Conclusions</p>\n"
+            << "<pre>" << conclusion.str() << "</pre>\n"
             << "<a href=\"/\">Back</a>\n";
 
         return constructHTMLResponse(Status::OK, body.str());
@@ -126,9 +150,11 @@ std::string WebServer::constructHTMLResponse(Status status, const std::string& b
              << "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
              << "  <title>Expert System</title>\n"
              << "  <style>\n"
-             << "    body { font-family: sans-serif; margin: 2em; text-align: center; color: #748873; background-color: #E5E0D8}\n"
+             << "    body { font-family: sans-serif; margin: 2em auto; text-align: center; color: #748873; background-color: #E5E0D8; max-width: 70ch; } \n"
              << "    textarea { width: 90%; height: 200px; margin: 1em 0; font-family: monospace; }\n"
-             << "    button { padding: 0.5em 1.5em; font-size: 1em; cursor: pointer; }\n"
+             << "    button { padding: 0.5em 1.5em; font-size: 1em; cursor: pointer; color: #D1A980; }\n"
+             << "    pre { text-align: left; overflow-x: auto; background-color: #F8F8F8; padding: 1.1em; border: solid; }\n"
+             << "    a { color: #D1A980; }\n a:visited { color: #b48e68; }\n"
              << "  </style>\n"
              << "</head>\n"
              << "<body>\n"
@@ -137,7 +163,7 @@ std::string WebServer::constructHTMLResponse(Status status, const std::string& b
              << "</html>";
 
     std::string responseBody = fullHtml.str();
-    
+
     std::ostringstream response;
         response << "HTTP/1.1 " << static_cast<std::underlying_type<Status>::type>(status) << "\r\n"
                 << "Content-Type: text/html; charset=UTF-8\r\n"
@@ -165,10 +191,12 @@ void WebServer::start() {
                 std::string path = parsePath(request);
                 std::string queryString = parseQueryString(request);
 
-                std::cout   << "\nREQUEST\nmethod: {" << method
-                            << "}\npath: {" << path
-                            << "}\nqueryStrings: {"<< queryString
-                            << "}\nrequst {\n" << request << "}\n";
+                std::cout   << "\nREQUEST\n"
+                            // << "method: {" << method << "}\n"
+                            << "path: {" << path << "}\n"
+                            << "queryStrings: {"<< queryString << "}\n"
+                            // << "requst {\n" << request 
+                            ;
 
                 std::string response = constructHTMLResponse(Status::NOT_FOUND);
 
@@ -215,7 +243,9 @@ std::string WebServer::readFullFequest(int client) {
     return request;
 }
 
-std::string urlDecode(const std::string &src) {
+// Utils / helpers
+
+static std::string urlDecode(const std::string &src) {
     std::string result;
     result.reserve(src.size());
     for (size_t i = 0; i < src.size(); i++) {
@@ -234,6 +264,27 @@ std::string urlDecode(const std::string &src) {
     return result;
 }
 
+
+//https://stackoverflow.com/a/34571089/5155484
+
+typedef unsigned char uchar;
+static const std::string b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";//=
+static std::string base64_encode(const std::string &in) {
+    std::string out;
+
+    int val=0, valb=-6;
+    for (uchar c : in) {
+        val = (val<<8) + c;
+        valb += 8;
+        while (valb>=0) {
+            out.push_back(b[(val>>valb)&0x3F]);
+            valb-=6;
+        }
+    }
+    if (valb>-6) out.push_back(b[((val<<8)>>(valb+8))&0x3F]);
+    while (out.size()%4) out.push_back('=');
+    return out;
+}
 
 void grapvis() {
     std::string dotSpec = "strict digraph {A -> B\nB -> C }";
