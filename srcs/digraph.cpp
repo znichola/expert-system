@@ -128,9 +128,9 @@ void Digraph::addRule(const Rule &rule) {
     }
 
     // TODO change to accept complicated rules in conclusion
-    // if (!rule.expr.isValidRule()) {
-    //     throw std::runtime_error("Invalid rule");
-    // }
+    if (!rule.expr.isValidRule()) {
+        throw std::runtime_error("Invalid rule: " + rule.toString());
+    }
 
     // Check if this is an Iff expression
     if (auto iff = std::get_if<Iff>(&rule.expr)) {

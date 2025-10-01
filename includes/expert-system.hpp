@@ -100,9 +100,9 @@ struct Fact {
             comment(comment), id(label) {}
 
     std::string toString() const {
-        return std::string(1, label) + " is " + (
-                state == State::True  ? "true" : 
-                state == State::False ? "false" : "undetermined");
+        return std::string(1, label) + ":" + (
+                state == State::True  ? "True" : 
+                state == State::False ? "False" : "Undetermined");
     }
 };
 

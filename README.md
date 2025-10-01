@@ -50,11 +50,12 @@ We want to install it as a static lib, we will then link this to the project and
 
 In a folder somewhere download the tar for the release, unpackage it, configure, then make, then insall (put the resulting lib & binaries somewhere).
 
+These make commands are useful to do just this.
+
 ```bash
-wget https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/13.1.2/graphviz-13.1.2.tar.gz
-tar -xf graphviz-13.1.2
-cd graphviz-13.1.2
-./configure --enable-static --disable-shared --enable-ltdl=no --prefix=$HOME/graphviz-static
-make
-make all
+# download the release and put it in the external_deps folder
+make external_deps/graphviz-13.1.2
+# build the graphviz project and install it into GV_PREFIX = $(HOME)/graphviz
+make graphviz
 ```
+ps. Graphvis uses a very strange system for dynamically loading different parts of the pipeline, it's simplest to install it as dynamically linked lib, this is their default. I've lost many hours trying to link it staticaly, the problem is registering the static libs so at runtime it actually works and can the png, layout .. etc engine. 
