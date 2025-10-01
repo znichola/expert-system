@@ -12,6 +12,8 @@
 
 static std::string urlDecode(const std::string &src);
 static std::string base64_encode(const std::string &in);
+static std::string genGraphImg(const Digraph &digraph);
+
 
 WebServer* g_server = nullptr;
 bool running = true;
@@ -72,19 +74,25 @@ void WebServer::registerGetRoutes() {
         }
 
         std::ostringstream conclusion;
+        std::string png;
+        Digraph digraph;
 
         try {
             std::vector<Token> tokens = tokenizer(rules);
             auto [rules, facts, queries] = parseTokens(tokens);
-            Digraph digraph = makeDigraph(facts, rules);
+            digraph = makeDigraph(facts, rules);
 
             for (const auto &query : queries) {
                 auto res = digraph.solveForFact(query.label, false);
                 conclusion << query.label << " is " << res << std::endl;
             }
+
+
         } catch (std::exception &e) {
             conclusion << "Error: " << e.what() << std::endl;
         }
+
+        png = genGraphImg(digraph);
 
         (void)base64_encode("foobar");
 
@@ -94,6 +102,8 @@ void WebServer::registerGetRoutes() {
             << "<pre>" << rules << "</pre>\n"
             << "<p>Conclusions</p>\n"
             << "<pre>" << conclusion.str() << "</pre>\n"
+            << "<p>Node digraph</p>"
+            << "<img alt=\"My Image\" src=\"data:image/gif;base64," << base64_encode(png) << "\">\n"
             << "<a href=\"/\">Back</a>\n";
 
         return constructHTMLResponse(Status::OK, body.str());
@@ -155,6 +165,7 @@ std::string WebServer::constructHTMLResponse(Status status, const std::string& b
              << "    button { padding: 0.5em 1.5em; font-size: 1em; cursor: pointer; color: #D1A980; }\n"
              << "    pre { text-align: left; overflow-x: auto; background-color: #F8F8F8; padding: 1.1em; border: solid; }\n"
              << "    a { color: #D1A980; }\n a:visited { color: #b48e68; }\n"
+             << "    img { border: solid; display: block; width: 100%; width: -moz-available; width: -webkit-fill-available; width: stretch; margin: auto; }\n"
              << "  </style>\n"
              << "</head>\n"
              << "<body>\n"
@@ -284,6 +295,50 @@ static std::string base64_encode(const std::string &in) {
     if (valb>-6) out.push_back(b[((val<<8)>>(valb+8))&0x3F]);
     while (out.size()%4) out.push_back('=');
     return out;
+}
+
+static void graphvisToFilePNG(const std::string &input, FILE *out);
+
+static std::string genGraphImg(const Digraph &digraph) {
+    (void)digraph;
+
+    char* buffer = nullptr;
+    size_t size = 0;
+    
+    // Create memory stream to store resulting png image of the graph
+    FILE* memfile = open_memstream(&buffer, &size);
+    if (!memfile) {
+        perror("open_memstream");
+        return "";
+    }
+
+    const std::string &dotFile = digraph.toDot();
+    graphvisToFilePNG(dotFile, memfile);
+
+    fclose(memfile);
+
+    std::string pngGraph(buffer, size);
+
+    free(buffer);
+
+    return pngGraph;
+}
+
+static void graphvisToFilePNG(const std::string &input, FILE *out) {
+    GVC_t *gvc = gvContext();
+
+    Agraph_t *g = agmemread(input.c_str());
+    if (!g) {
+        std::cerr << "Error: could not parse graph spec.\n";
+        gvFreeContext(gvc);
+        return;
+    }
+
+    gvLayout(gvc, g, "dot");
+    gvRender(gvc, g, "png", out);
+    gvFreeLayout(gvc, g);
+    agclose(g);
+    gvFreeContext(gvc);
 }
 
 void grapvis() {
