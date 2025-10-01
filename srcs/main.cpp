@@ -13,6 +13,7 @@ struct InputOptions {
     bool isServer = false;
     bool isExplain = false;
     bool isDot = false;
+    bool isFacts = false;
 };
 
 
@@ -23,6 +24,30 @@ InputOptions parseInput(int ac, char **av);
 bool isHelpPrint(const InputOptions &opts, char *argv0);
 std::string getInputOrErrorExit(const InputOptions &opts);
 bool isServerLaunch(const InputOptions &opts);
+
+std::string getNewFactsLineFromUser(std::string input)
+{
+    std::cout << "Enter new facts line (e.g., '=AB'): ";
+    std::string newFactsLine;
+    std::getline(std::cin, newFactsLine);
+    // Replace or add the facts line in the input
+    std::istringstream iss(input);
+    std::string line;
+    std::string updatedInput;
+    bool foundFactsLine = false;
+    while (std::getline(iss, line)) {
+        if (!line.empty() && line[0] == '=') {
+            updatedInput += newFactsLine + "\n";
+            foundFactsLine = true;
+        } else {
+            updatedInput += line + "\n";
+        }
+    }
+    if (!foundFactsLine) {
+        updatedInput += newFactsLine + "\n";
+    }
+    return updatedInput;
+}
 
 int main(int argc, char ** argv) {
     InputOptions opts = parseInput(argc, argv);
@@ -45,20 +70,32 @@ int main(int argc, char ** argv) {
         return 1;
     }
     // MAIN ENTRY POINT
-    try {
-        std::vector<Token> tokens = tokenizer(input);
-        auto [rules, facts, queries] = parseTokens(tokens);
-        Digraph digraph = makeDigraph(facts, rules);
+    bool userWantToChangeFacts = true;
+    while (userWantToChangeFacts) {
+        try {
+            std::vector<Token> tokens = tokenizer(input);
+            auto [rules, facts, queries] = parseTokens(tokens);
+            Digraph digraph = makeDigraph(facts, rules);
 
-        for (const auto &query : queries) {
-            auto res = digraph.solveForFact(query.label, opts.isExplain);
-            std::cout << query.label << " is " << res << std::endl;
+            for (const auto &query : queries) {
+                auto res = digraph.solveForFact(query.label, opts.isExplain);
+                std::cout << query.label << " is " << res << std::endl;
+            }
+        } catch (std::exception &e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return 1;
         }
-    } catch (std::exception &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
+        if (!opts.isFacts)
+            break;
+        std::cout << "Do you want to change the facts and re-evaluate? (y/n): ";
+        std::string answer;
+        std::getline(std::cin, answer);
+        if (answer != "y" && answer != "Y") {
+            userWantToChangeFacts = false;
+        } else {
+            input = getNewFactsLineFromUser(input);
+        }
     }
-
     return 0;
 }
 
@@ -76,6 +113,8 @@ InputOptions parseInput(int ac, char **av) {
             res.isExplain = true;
         if (s == "--dot" || s == "-d")
             res.isDot = true;
+        if (s == "--facts" || s == "-f")
+            res.isFacts = true;
         else
             res.file = av[i];
     }

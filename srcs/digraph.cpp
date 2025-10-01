@@ -189,7 +189,50 @@ void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
                     : Fact::State::Undetermined);
         return ;
     }
-    
+    else if (auto and_expr = std::get_if<And>(&expr)) {
+        // And handling
+        if (state == Fact::State::True) {
+            // A + B = True means both A and B must be True
+            setExprVarsToState(and_expr->lhs(), Fact::State::True);
+            setExprVarsToState(and_expr->rhs(), Fact::State::True);
+        } else if (state == Fact::State::False) {
+            // A + B = False: we can't determine individual values
+            setExprVarsToState(and_expr->lhs(), Fact::State::Undetermined);
+            setExprVarsToState(and_expr->rhs(), Fact::State::Undetermined);
+        }
+        return;
+    }
+    else if (auto or_expr = std::get_if<Or>(&expr)) {
+        // Or handling  
+        if (state == Fact::State::True) {
+            // A | B = True: we can't determine which one is true
+            // Both could be true, or just one - ambiguous
+            // set both to undetermined
+            setExprVarsToState(or_expr->lhs(), Fact::State::Undetermined);
+            setExprVarsToState(or_expr->rhs(), Fact::State::Undetermined);
+        } else if (state == Fact::State::False) {
+            // A | B = False means both A and B must be False
+            setExprVarsToState(or_expr->lhs(), Fact::State::False);
+            setExprVarsToState(or_expr->rhs(), Fact::State::False);
+        }
+        return;
+    }
+    else if (auto xor_expr = std::get_if<Xor>(&expr)) {
+        // Xor handling
+        if (state == Fact::State::True) {
+            // A ^ B = True: exactly one is true, but we don't know which
+            // Can't determine individual values without more info
+            // set both to undetermined
+            setExprVarsToState(xor_expr->lhs(), Fact::State::Undetermined);
+            setExprVarsToState(xor_expr->rhs(), Fact::State::Undetermined);
+        } else if (state == Fact::State::False) {
+            // A ^ B = False: either both true or both false
+            // Can't determine individual values without more info
+            setExprVarsToState(xor_expr->lhs(), Fact::State::Undetermined);
+            setExprVarsToState(xor_expr->rhs(), Fact::State::Undetermined);
+        }
+        return;
+    }
     throw std::runtime_error("Set facts not handled for this expr "
             + expr.toString());
 
