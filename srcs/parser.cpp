@@ -27,11 +27,13 @@ std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
     vector<Rule> rules;
     vector<Query> queries = parseQueries(input);
     vector<Fact> facts = parseFacts(input);
+
     if (queries.empty())
         throw std::runtime_error("No queries found in input");
     if (facts.empty())
         throw std::runtime_error("No facts found in input");
 
+    
     size_t i = 0;
     while (i < input.size())
     {
@@ -43,11 +45,24 @@ std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
         auto [newI, lineTokens, comment] = getNextLine(input, i);
         i = newI;
         if (!lineTokens.empty()) {
+            // add parentheses around the entire expression
+            // to be sure that the conclusion and the premis are well separated
+            lineTokens.push_back(Token(")", lineTokens[0].line_number, Token::Type::Parenthese));
+            lineTokens.insert(lineTokens.begin(), Token("(", lineTokens[0].line_number, Token::Type::Parenthese));
+            // insert parentheses before and after "=>", "<=>"
+            for (size_t j = 0; j < lineTokens.size(); j++) {
+                if (lineTokens[j].token_list == "=>" || lineTokens[j].token_list == "<=>") {
+                    lineTokens.insert(lineTokens.begin() + j, Token(")", lineTokens[0].line_number, Token::Type::Parenthese));
+                    lineTokens.insert(lineTokens.begin() + j + 2, Token("(", lineTokens[0].line_number, Token::Type::Parenthese));
+                    j += 2; // skip the newly added tokens
+                }
+            }
             Parser parser{0, lineTokens};
 
             try {
                 Expr expr = parser.parse();
                 rules.push_back(Rule(expr, lineTokens[0].line_number, comment));
+                // printf("Parsed rule: %s\n", rules.back().toString().c_str());
             } catch (const std::exception &e) {
                 std::cerr << "Line: " << lineTokens[0].line_number << " :" << e.what() << std::endl;
                 //! TODO for now just exit, later we might want to ask the user if they want to change the input

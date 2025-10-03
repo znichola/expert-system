@@ -69,6 +69,27 @@ std::string Digraph::toDot() const {
     return ss.str();
 }
 
+bool Digraph::isFactInAmbiguousConclusion(char fact_id) {
+    auto fact_it = facts.find(fact_id);
+    if (fact_it == facts.end()) return false;
+    
+    // Check if this fact appears in any rule conclusion that creates ambiguity
+    for (const auto &rule_id : fact_it->second.consequent_rules) {
+        auto rule_it = rules.find(rule_id);
+        if (rule_it != rules.end()) {
+            // Check if the rule's conclusion is an Or, Xor, or other ambiguous expression
+            // that when set to True doesn't uniquely determine this fact
+            auto values = rule_it->second.expr.getValues();
+            if (values.rhs) {
+                if (std::holds_alternative<Or>(*(values.rhs)) ||
+                    std::holds_alternative<Xor>(*(values.rhs))) {
+                    return true; // This fact is in an ambiguous conclusion
+                }
+            }
+        }
+    }
+    return false;
+}
 
 void Digraph::addFact(const Fact &fact) {
     auto it = facts.find(fact.id);
@@ -107,9 +128,9 @@ void Digraph::addRule(const Rule &rule) {
     }
 
     // TODO change to accept complicated rules in conclusion
-    if (!rule.expr.isValidRule()) {
-        throw std::runtime_error("Invalid rule");
-    }
+    // if (!rule.expr.isValidRule()) {
+    //     throw std::runtime_error("Invalid rule");
+    // }
 
     // Check if this is an Iff expression
     if (auto iff = std::get_if<Iff>(&rule.expr)) {
@@ -274,6 +295,13 @@ Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
     // Remove from solving stack
     solving_stack.erase(fact_id);
 
+    // Closed World Assumption - undetermined facts default to False
+    // if (fact.state == Fact::State::Undetermined) {
+    //     if (isExplain) {
+    //         std::cout << "No rule proved " << fact_id << " true, setting to False (Closed World Assumption)" << std::endl;
+    //     }
+    //     fact.state = Fact::State::False;
+    // }
     return fact.state;
 }
 

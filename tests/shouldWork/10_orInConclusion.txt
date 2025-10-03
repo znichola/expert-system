@@ -3,4 +3,4 @@ L => B
 U => B
 B => M
 =A
-?M 
+?MLU

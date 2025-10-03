@@ -1,24 +1,25 @@
 # Expert System Test Case - Complex Parentheses
 # No operations in conclusions, no iff cases
 
+(A + C) <=> E             # A and C implies E
 A => B                    # A implies B
 C => D                    # C implies D  
-(A + B) => E              # A and B implies E
 (C | D) => F              # C or D implies F
 (E + F) => G              # E and F implies G
 (!A | B) => H             # not A or B implies H
-(A + !C) => I             # A and not C implies I
-((A + B) | C) => J        # (A and B) or C implies J
-(!(E + F) | G) => K       # not(E and F) or G implies K
-((H + I) ^ J) => L        # (H and I) xor J implies L
-(A ^ B) => M              # A xor B implies M
-(!G + H) => N             # not G and H implies N
-((I | J) + !K) => O       # (I or J) and not K implies O
-(M ^ (N + O)) => P        # M xor (N and O) implies P
-((A + B) | (!C + D)) => Q # (A and B) or (not C and D) implies Q
+A + !C <=> I            # A and not C implies I
+(A + B) | C => J        # (A and B) or C implies J
+!(E + F) | G => K       # not(E and F) or G implies K
+(H + I) ^ J => L        # (H and I) xor J implies L
+A ^ B => M              # A xor B implies M
+!G + H => N             # not G and H implies N
+(I | J) + !K => O       # (I or J) and not K implies O
+M ^ (N + O) => P        # M xor (N and O) implies P
+(A + B) | (!C + D) => Q # (A and B) or (not C and D) implies Q
 
-=AC     # Initial facts: A and C are true
+=E     # Initial facts: E is true
 
 ?ABDEFGHIJKLMNOPQ    # Query all derived facts
-# Expected: A,B,C,D,E,F,G,H,J,K,Q
-# Undetermined:
+# Expected:
+# True: A,B,C,D,E,F,G,H,J,K,Q
+# False: I, L, M, N, O, P

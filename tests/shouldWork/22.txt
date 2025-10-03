@@ -1,0 +1,15 @@
+# Deeply nested parentheses with mixed operators
+((A + B) | (C ^ D)) => AA         # Deep nesting level 1
+(!(E + F) ^ (G | H)) => BB        # Negation of complex expressions
+((I ^ J) + !(K | L)) <=> CC       # Iff with deep nesting
+(((M + N) | O) ^ (P + (Q | R))) => DD  # Very deep nesting
+
+# Circular dependencies and potential contradictions
+EE => FF + GG                     # EE implies both FF and GG
+FF => !GG                         # But FF implies NOT GG (contradiction!)
+GG => !FF                         # And GG implies NOT FF (contradiction!)
+
+# Complex mixed operator precedence tests
+A + B | C ^ D => NN               # Tests precedence: (A + B) | (C ^ D)
+!(A | B) + (C ^ D) <=> OO         # Negation with complex grouping
+((A + !B) ^ (C | !D)) | E => PP   # Mixed negations and operators

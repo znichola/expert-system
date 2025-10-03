@@ -1,0 +1,49 @@
+# Expert System Stress Test - Maximum Complexity
+# Tests: complex conclusions, iff cases, deep nesting, circular dependencies, ambiguous states
+
+# Complex conclusions with operations
+A + B => C + D                    # AND in conclusion
+E | F => G | H                    # OR in conclusion (ambiguous)
+I ^ J => K ^ L                    # XOR in conclusion (ambiguous)
+M => N + O + P                    # Multiple AND in conclusion
+Q => R | (S + T)                  # Mixed operations in conclusion
+
+# Iff cases creating bidirectional dependencies
+A <=> U + V                       # Iff with AND
+(B + C) <=> (W ^ X)              # Complex iff with different operators
+Y <=> !Z                         # Iff with negation
+(A | B) <=> (C + D)              # Iff connecting OR and AND
+
+
+#True: A, E, M, Q, Y, U, V, C, D, N, O, P
+#Undetermined: G, H, R, S, T, 
+#False: Z, J, I, F
+
+#True: A, U, V
+#Undetermined: 
+#False: J, I, F, B
+
+# Facts that should create cascading effects and contradictions
+=AEMQY     # Initial facts: A, E, M, Q, Y are true
+
+# Query everything to see what breaks
+?ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+# Expected challenges for your system:
+# 1. Complex conclusions: Some facts should be set to multiple values
+# 2. Contradictions: FF/GG should create conflicts  
+# 3. Ambiguous states: Many facts should remain undetermined
+# 4. Cycle detection: Should prevent infinite loops
+# 5. Deep recursion: Nested expressions should parse correctly
+# 6. Precedence: Mixed operators should be handled properly
+# 7. Long dependency chains: Should handle complex propagation
+# 8. Iff bidirectional: Should create proper two-way implications
+
+# This test is designed to find bugs in:
+# - setExprVarsToState() for complex conclusions
+# - Cycle detection algorithms  
+# - Operator precedence parsing
+# - Contradiction handling
+# - Memory management with deep recursion
+# - Iff operator implementation
+# - Ambiguous state resolution
