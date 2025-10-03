@@ -4,14 +4,11 @@
 #include <sstream>
 #include <csignal>
 
-#include <graphviz/gvc.h>
-
 #include "expert-system.hpp"
 #include "parser.hpp"
 #include "server.hpp"
 
 static std::string urlDecode(const std::string &src);
-static std::string base64_encode(const std::string &in);
 static std::string genGraphImg(const Digraph &digraph);
 
 
@@ -58,7 +55,6 @@ void WebServer::registerGetRoutes() {
         << "<form action=\"evaluate\" method=\"get\">\n"
         << "    <textarea name=\"rules\" placeholder=\"Enter your ruleset here...\"></textarea><br>\n"
         << "    <button type=\"submit\">Submit</button>\n"
-// <img alt=\"My Image\" src=\"data:image/gif;base64,this is how we add the graph image to the single html page, no internal server state!"/>"
         << "</form>\n";
         return constructHTMLResponse(Status::OK, body.str());
     };
@@ -74,7 +70,7 @@ void WebServer::registerGetRoutes() {
         }
 
         std::ostringstream conclusion;
-        std::string png;
+        std::string img;
         Digraph digraph;
 
         try {
@@ -92,9 +88,7 @@ void WebServer::registerGetRoutes() {
             conclusion << "Error: " << e.what() << std::endl;
         }
 
-        png = genGraphImg(digraph);
-
-        (void)base64_encode("foobar");
+        img = genGraphImg(digraph);
 
         std::ostringstream body;
         body << "<h1>Evaluation</h1>\n"
@@ -103,7 +97,7 @@ void WebServer::registerGetRoutes() {
             << "<p>Conclusions</p>\n"
             << "<pre>" << conclusion.str() << "</pre>\n"
             << "<p>Node digraph</p>"
-            << "<img alt=\"My Image\" src=\"data:image/gif;base64," << base64_encode(png) << "\">\n"
+            << img
             << "<a href=\"/\">Back</a>\n";
 
         return constructHTMLResponse(Status::OK, body.str());
@@ -275,29 +269,14 @@ static std::string urlDecode(const std::string &src) {
     return result;
 }
 
+// #define WITH_GRAPHVIZ
 
-//https://stackoverflow.com/a/34571089/5155484
+#ifdef WITH_GRAPHVIZ 
+#include <graphviz/gvc.h>
 
-typedef unsigned char uchar;
-static const std::string b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";//=
-static std::string base64_encode(const std::string &in) {
-    std::string out;
-
-    int val=0, valb=-6;
-    for (uchar c : in) {
-        val = (val<<8) + c;
-        valb += 8;
-        while (valb>=0) {
-            out.push_back(b[(val>>valb)&0x3F]);
-            valb-=6;
-        }
-    }
-    if (valb>-6) out.push_back(b[((val<<8)>>(valb+8))&0x3F]);
-    while (out.size()%4) out.push_back('=');
-    return out;
-}
-
+static std::string base64_encode(const std::string &in);
 static void graphvisToFilePNG(const std::string &input, FILE *out);
+static std::string imgHTMLFromRawImg(const std::string &rawImg);
 
 static std::string genGraphImg(const Digraph &digraph) {
     (void)digraph;
@@ -321,7 +300,11 @@ static std::string genGraphImg(const Digraph &digraph) {
 
     free(buffer);
 
-    return pngGraph;
+    return imgHTMLFromRawImg(base64_encode(pngGraph));
+}
+
+static std::string imgHTMLFromRawImg(const std::string &rawImg) {
+    return "<img alt=\"My Image\" src=\"data:image/png;base64," + rawImg + "\">\n";
 }
 
 static void graphvisToFilePNG(const std::string &input, FILE *out) {
@@ -341,27 +324,32 @@ static void graphvisToFilePNG(const std::string &input, FILE *out) {
     gvFreeContext(gvc);
 }
 
-void grapvis() {
-    std::string dotSpec = "strict digraph {A -> B\nB -> C }";
+//https://stackoverflow.com/a/34571089/5155484
 
-    GVC_t *gvc = gvContext();
+typedef unsigned char uchar;
+static const std::string b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";//=
+static std::string base64_encode(const std::string &in) {
+    std::string out;
 
-    Agraph_t *g = agmemread(dotSpec.c_str());
-    if (!g) {
-    std::cerr << "Error: could not parse graph spec.\n";
-    gvFreeContext(gvc);
-    return;
+    int val=0, valb=-6;
+    for (uchar c : in) {
+        val = (val<<8) + c;
+        valb += 8;
+        while (valb>=0) {
+            out.push_back(b[(val>>valb)&0x3F]);
+            valb-=6;
+        }
     }
-
-    gvLayout(gvc, g, "dot");
-
-    gvRender(gvc, g, "png", stdout);
-
-    gvFreeLayout(gvc, g);
-
-    agclose(g);
-
-    gvFreeContext(gvc);
+    if (valb>-6) out.push_back(b[((val<<8)>>(valb+8))&0x3F]);
+    while (out.size()%4) out.push_back('=');
+    return out;
 }
 
+#else
 
+static std::string genGraphImg(const Digraph &digraph) {
+    (void)digraph;
+    return "<div style='border: solid; background-color: white; padding: 1em;'>Install graphviz for cool graphs</div>";
+}
+
+#endif

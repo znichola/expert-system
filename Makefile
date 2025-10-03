@@ -31,15 +31,22 @@ SRCS	= $(addprefix $(SRCS_PATH), $(addsuffix .cpp, $(FILES)))
 OBJS	= $(addprefix $(OBJS_PATH), $(addsuffix .o, $(FILES)))
 
 GV_PREFIX = $(HOME)/graphviz
-GV_INCLUDE = $(GV_PREFIX)/include
-GV_LIBS = -L$(GV_PREFIX)/lib -lgvc -lcgraph -lcdt -Wl,-rpath,$(GV_PREFIX)/lib
 
+# Used to build the project with/without graphvis functionality
+WITH_GRAPHVIZ := $(shell [ -f $(GV_PREFIX)/include/graphviz/gvc.h ] && echo 1 || echo 0)
+
+ifeq ($(WITH_GRAPHVIZ),1)
+    CFLAGS += -DWITH_GRAPHVIZ -I$(GV_PREFIX)/include
+    GV_LIBS = -L$(GV_PREFIX)/lib -lgvc -lcgraph -lcdt -Wl,-rpath,$(GV_PREFIX)/lib
+else
+    GV_LIBS =
+endif
 
 all	: $(NAME)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c -I$(INCS_PATH) -I$(GV_INCLUDE) -o $@ $<
+	$(CC) $(CFLAGS) -c -I$(INCS_PATH) -o $@ $<
 
 $(NAME)	: $(OBJS) $(MAIN_OBJ)
 	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) $(GV_LIBS) -o $@
@@ -79,3 +86,4 @@ graphviz:
 $(LIBNAME): $(OBJS)
 	ar rcs $(LIBNAME) $(OBJS)
 
+.PHONY: all clean fclean re leaks run graphviz
