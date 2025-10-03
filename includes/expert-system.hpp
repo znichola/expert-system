@@ -157,7 +157,7 @@ struct Digraph {
     RulesMap rules;
     std::set<char> solving_stack; // Add this for cycle detection
 //    FactMap  questFacts; // facts for which a search is already launched
-
+    int countDeterminedAntecedents(const std::string& rule_id);
     void addFact(const Fact &fact);
 
     // add rule implicitly will also add relevant facts

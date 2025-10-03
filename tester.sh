@@ -41,9 +41,10 @@ for file in tests/shouldWork/*.txt; do
         else
             echo -e "\e[31mTest failed (output mismatch): $file\e[0m"
             echo "Expected output:"
-            cat "$expected_file"
+            # cat "$expected_file"
             echo "Actual output:"
-            cat output.tmp
+            # cat output.tmp
+            diff -u "$expected_file" output.tmp || true
             FAILED=$((FAILED + 1))
         fi
     else

@@ -15,13 +15,9 @@ Y <=> !Z                         # Iff with negation
 (A | B) <=> (C + D)              # Iff connecting OR and AND
 
 
-#True: A, E, M, Q, Y, U, V, C, D, N, O, P
-#Undetermined: G, H, R, S, T, 
-#False: Z, J, I, F
-
-#True: A, U, V
-#Undetermined: 
-#False: J, I, F, B
+#True: A, D, D, E, M,  N, O, P, Q, Y, U, V, Y
+#Undetermined: B, G, H, R, S, T, W, X
+#False: F, I, J, K, L, Z
 
 # Facts that should create cascading effects and contradictions
 =AEMQY     # Initial facts: A, E, M, Q, Y are true

@@ -188,12 +188,16 @@ void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
 
         if (fact.state == Fact::State::Undetermined) {
             fact.state = state;
-        } else if (state != fact.state) {
+        } else if (fact.state == state || state == Fact::State::Undetermined) { // if same state or determined facts to undetermined
+            // Same state, no problem
+            return;
+        } else {
+            // Real contradiction
             std::stringstream ss;
-            ss << "Contradiciton: Can't set fact " << fact << " to "
+            ss << "Contradiction: Can't set fact " << fact << " to "
                << state << " it's already " << fact.state;
             throw std::runtime_error(ss.str());
-        } 
+        }
         
         // TODO should we allow setting to Undetermined? 
         // else {
@@ -266,7 +270,6 @@ void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
 
 Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
     auto f = facts.find(fact_id);
-
     if (f == facts.end()){
         throw std::runtime_error("Fact not found, impossible to solve!");
     }
@@ -276,10 +279,10 @@ Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
     // Check for cycle
     if (solving_stack.find(fact_id) != solving_stack.end()) {
         if (isExplain) {
-            std::cout << "Cycle detected for fact " << fact_id << ", setting to False" << std::endl;
+            std::cout << "Cycle detected for fact " << fact_id << ", deferring to other rules" << std::endl;
         }
-        fact.state = Fact::State::False;
-        return fact.state;
+        // Don't set to False immediately - return undetermined and let other rules try
+        return Fact::State::Undetermined;
     }
 
     // Add to solving stack
@@ -295,16 +298,26 @@ Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
     // Remove from solving stack
     solving_stack.erase(fact_id);
 
-    // Closed World Assumption - undetermined facts default to False
-    // if (fact.state == Fact::State::Undetermined) {
-    //     if (isExplain) {
-    //         std::cout << "No rule proved " << fact_id << " true, setting to False (Closed World Assumption)" << std::endl;
-    //     }
-    //     fact.state = Fact::State::False;
-    // }
     return fact.state;
 }
 
+// Helper function to count determined antecedents in a rule
+int Digraph::countDeterminedAntecedents(const std::string& rule_id) {
+    auto rule_it = rules.find(rule_id);
+    if (rule_it == rules.end()) return 0;
+    
+    auto antecedent_facts = rule_it->second.antecedent_facts;
+    int determined_count = 0;
+    
+    for (char fact_id : antecedent_facts) {
+        auto fact_it = facts.find(fact_id);
+        if (fact_it != facts.end() && fact_it->second.state != Fact::State::Undetermined) {
+            determined_count++;
+        }
+    }
+    
+    return determined_count;
+}
 
 Fact::State Digraph::solveRule(const std::string &rule_id, bool isExplain) {
     auto r = rules.find(rule_id);
@@ -441,22 +454,11 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
         // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
         Fact::State operator()(const Iff &n)
         {
+            (void)n;
             if (isExplain) {
-            std::cout << "IN Iff " << n << std::endl;
+                std::cout << "WARNING: Iff operator called - should have been converted to Imply rules" << std::endl;
             }
-        
-            // Get the actual operands from the Iff expression
-            Expr lhs_real = n.lhs();
-            Expr rhs_real = n.rhs();
-            
-            // Create the two implications: (A ⇒ B) and (B ⇒ A)
-            Expr forward_imply = Imply(lhs_real, rhs_real);
-            Expr backward_imply = Imply(rhs_real, lhs_real);
-            
-            // Combine them with AND: ((A ⇒ B) ∧ (B ⇒ A))
-            Expr both = And(forward_imply, backward_imply);
-            
-                return visit(*this, both);
+            throw std::runtime_error("Iff operator should not be directly evaluated");
         }
     };
     return std::visit(Solver{*this, isExplain}, expr);
