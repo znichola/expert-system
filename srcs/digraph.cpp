@@ -23,7 +23,13 @@ Digraph::SolveRes Digraph::solveEverythingNoThrow(const std::vector<Query> &quer
 }
 
 
-void Digraph::applyClosedWorldAssumption() {
+void Digraph::applyWorldAssumption(bool open) {
+    if (open) {
+        if (isExplain) {
+            explanation << "Applying Open World Assumption: Facts are Undetermined by default" << std::endl;
+        }
+        return ;
+    }
     for (auto &[fact_id, fact]: facts) {
         if (fact.state == Fact::State::Undetermined && fact.consequent_rules.empty()) {
             if (isExplain) {
@@ -373,6 +379,7 @@ Fact::State Digraph::solveRule(const std::string &rule_id) {
     if (isExplain) {
         explanation << "solveRule " << rule_id << ": result " << res << std::endl;
     }
+    // TODO : should their be a check for rules that resolve to false, it should be illigal in this sytem, right?
     return res;
 }
 

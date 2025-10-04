@@ -21,6 +21,7 @@ struct InputOptions {
     bool isDot = false;
     bool isInteractive = false;
     bool isOpenWorldAssumption = false;
+
 };
 
 std::string getFileInput(char *fileName);
@@ -199,7 +200,7 @@ struct Digraph {
     Fact::State solveExpr(const Expr &expr);
 
     SolveRes solveEverythingNoThrow(const std::vector<Query> &queries);
-    void applyClosedWorldAssumption();
+    void applyWorldAssumption(bool open);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
@@ -212,14 +213,23 @@ Digraph makeDigraph(
     );
 
 
+inline std::ostream& operator<<(std::ostream& os, const InputOptions& opt) {
+    os << "=== Selected Settings ===\n"
+       << "Help: " << (opt.isHelp ? "Yes" : "No") << '\n'
+       << "Server Mode: " << (opt.isServer ? "Yes" : "No") << '\n'
+       << "Explain Mode: " << (opt.isExplain ? "Yes" : "No") << '\n'
+       << "DOT Output: " << (opt.isDot ? "Yes" : "No") << '\n'
+       << "Interactive Mode: " << (opt.isInteractive ? "Yes" : "No") << '\n'
+       << "Open World Assumption: " << (opt.isOpenWorldAssumption ? "Yes" : "No") << '\n';
 
+    if (opt.port != 0)
+        os << "Port: " << opt.port << '\n';
+     if (opt.file && *opt.file)
+        os << "File: " << opt.file << '\n';
 
-
-/* solver.cpp */
-struct Foo {};
-Foo solve(const std::vector<Rule> &rules,
-        const std::vector<Fact> &facts,
-        const Query &query);
+    os << "=========================\n";
+    return os;
+}
 
 /* tokenize.cpp */
 vector<Token> tokenizer(string input);

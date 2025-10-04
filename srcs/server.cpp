@@ -22,6 +22,7 @@ void handleSigint(int) {
 }
 
 WebServer::WebServer(const InputOptions &opts) : opts(opts) {
+
     prefillRuleset = opts.file ? getFileInput(opts.file) : "";
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -48,6 +49,8 @@ WebServer::~WebServer() {
     if (server_fd != -1 && close(server_fd) != 0) perror("destructor close");
 }
 
+static std::string favicon();
+
 void WebServer::registerGetRoutes() {
     get_routes["/"] = [this](std::string queryParam) -> std::string {
         (void)queryParam;
@@ -73,21 +76,18 @@ void WebServer::registerGetRoutes() {
 
         std::ostringstream report;
         std::string img;
-        Digraph digraph;
-        digraph.isExplain = opts.isExplain;
 
         try {
             std::vector<Token> tokens = tokenizer(rules);
             auto [rules, facts, queries] = parseTokens(tokens);
-            digraph = makeDigraph(facts, rules);
+            Digraph digraph = makeDigraph(facts, rules);
+            digraph.isExplain = opts.isExplain;
             img = genGraphImg(digraph);
-            if (!opts.isOpenWorldAssumption) {
-                digraph.applyClosedWorldAssumption();
-            }
+            digraph.applyWorldAssumption(opts.isOpenWorldAssumption);
 
             auto [conclusion, explanation, isError] = digraph.solveEverythingNoThrow(queries);
-            report << "CONCLUSION\n"  << conclusion << "\n\n"
-                   << "EXPLANATION\n" << explanation << "\n";
+            report << "CONCLUSION\n"  << conclusion << "\n"
+                   << "EXPLANATION\n" << explanation;
             (void)isError;
 
         } catch (std::exception &e) {
@@ -106,6 +106,22 @@ void WebServer::registerGetRoutes() {
             << "<a href=\"/\">Back</a>\n";
 
         return constructHTMLResponse(Status::OK, body.str());
+    };
+
+    get_routes["/favicon.ico"] = [this](std::string queryParam) -> std::string {
+        (void)queryParam;
+        (void)this;
+        std::ostringstream response;
+        std::string icon = favicon();
+        response << "HTTP/1.1 200\r\n"
+                << "Content-Type: image/svg+xml; charset=UTF-8\r\n"
+                << "Connection : close\r\n"
+                << "Content-Length: " << icon.size() << "\r\n"
+                << "Cache-Control: public, max-age=31536000, immutable\r\n"
+                << "\r\n"
+                << icon;
+        std::cout << "Returning icon\n";
+        return response.str();
     };
 }
 
@@ -359,3 +375,63 @@ static std::string genGraphImg(const Digraph &digraph) {
 }
 
 #endif
+
+static std::string favicon() {
+    return {R"DELIM(
+<svg xmlns="http://www.w3.org/2000/svg" width="138.7" height="163.6">
+  <g stroke-linecap="round">
+    <path fill="none" stroke="#748873" stroke-width="4" d="m80 29 27 39M80 29l27 39"/>
+    <path fill="#748873" fill-rule="evenodd" d="m107 68-13-7 11-8 2 15"/>
+    <path fill="none" stroke="#748873" stroke-width="4" d="m107 68-13-7m13 7-13-7m0 0 11-8m-11 8 11-8m0 0 2 15m-2-15 2 15m0 0s0 0 0 0m0 0s0 0 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="none" stroke="#748873" stroke-width="4" d="m56 70 14 31M56 70l14 31"/>
+    <path fill="#748873" fill-rule="evenodd" d="M70 101 58 91l12-5v15"/>
+    <path fill="none" stroke="#748873" stroke-width="4" d="M70 101 58 91m12 10L58 91m0 0 12-5m-12 5 12-5m0 0v15m0-15v15m0 0s0 0 0 0m0 0s0 0 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="none" stroke="#748873" stroke-width="4" d="m115 88 1 38m-1-38 1 38"/>
+    <path fill="#748873" fill-rule="evenodd" d="m116 126-6-14h12l-6 14"/>
+    <path fill="none" stroke="#748873" stroke-width="4" d="m116 126-6-14m6 14-6-14m0 0h12m-12 0h12m0 0-6 14m6-14-6 14m0 0s0 0 0 0m0 0s0 0 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="none" stroke="#748873" stroke-width="4" d="m81 113 24 21m-24-21 24 21"/>
+    <path fill="#748873" fill-rule="evenodd" d="m105 134-15-5 9-9 6 14"/>
+    <path fill="none" stroke="#748873" stroke-width="4" d="m105 134-15-5m15 5-15-5m0 0 9-9m-9 9 9-9m0 0 6 14m-6-14 6 14m0 0s0 0 0 0m0 0s0 0 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="#748873" d="M91 23a14 14 0 0 1-5 11 12 12 0 0 1-3 2 12 12 0 0 1-7 1 12 12 0 0 1-7-5 14 14 0 0 1-3-9 15 15 0 0 1 0-4 14 14 0 0 1 4-6 12 12 0 0 1 10-3 12 12 0 0 1 8 5 14 14 0 0 1 3 6v2c0 1 0 0 0 0"/>
+    <path fill="none" stroke="#748873" d="M91 23a14 14 0 0 1-5 11 12 12 0 0 1-3 2 12 12 0 0 1-7 1 12 12 0 0 1-7-5 14 14 0 0 1-3-9 15 15 0 0 1 0-4 14 14 0 0 1 4-6 12 12 0 0 1 10-3 12 12 0 0 1 8 5 14 14 0 0 1 3 6v2c0 1 0 0 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="#748873" d="M128 80a14 14 0 0 1-5 10 12 12 0 0 1-4 3 12 12 0 0 1-6 0 12 12 0 0 1-8-4 14 14 0 0 1-3-9 15 15 0 0 1 1-5 14 14 0 0 1 4-5 12 12 0 0 1 10-3 12 12 0 0 1 8 4 14 14 0 0 1 2 7l1 2"/>
+    <path fill="none" stroke="#748873" d="M128 80a14 14 0 0 1-5 10 12 12 0 0 1-4 3 12 12 0 0 1-6 0 12 12 0 0 1-8-4 14 14 0 0 1-3-9 15 15 0 0 1 1-5 14 14 0 0 1 4-5 12 12 0 0 1 10-3 12 12 0 0 1 8 4 14 14 0 0 1 2 7l1 2s0 0 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="#748873" d="M66 67a14 14 0 0 1-5 10 12 12 0 0 1-3 2 12 12 0 0 1-7 1 12 12 0 0 1-7-5 14 14 0 0 1-3-8 15 15 0 0 1 0-5 14 14 0 0 1 4-6 12 12 0 0 1 10-2 12 12 0 0 1 8 4 14 14 0 0 1 3 6v3s0-1 0 0"/>
+    <path fill="none" stroke="#748873" d="M66 67a14 14 0 0 1-5 10 12 12 0 0 1-3 2 12 12 0 0 1-7 1 12 12 0 0 1-7-5 14 14 0 0 1-3-8 15 15 0 0 1 0-5 14 14 0 0 1 4-6 12 12 0 0 1 10-2 12 12 0 0 1 8 4 14 14 0 0 1 3 6v3s0-1 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="#748873" d="M90 110a14 14 0 0 1-5 10 12 12 0 0 1-3 2 12 12 0 0 1-7 1 12 12 0 0 1-7-5 14 14 0 0 1-3-8 15 15 0 0 1 0-5 14 14 0 0 1 4-6 12 12 0 0 1 10-3 12 12 0 0 1 8 5 14 14 0 0 1 3 6v3s0-1 0 0"/>
+    <path fill="none" stroke="#748873" d="M90 110a14 14 0 0 1-5 10 12 12 0 0 1-3 2 12 12 0 0 1-7 1 12 12 0 0 1-7-5 14 14 0 0 1-3-8 15 15 0 0 1 0-5 14 14 0 0 1 4-6 12 12 0 0 1 10-3 12 12 0 0 1 8 5 14 14 0 0 1 3 6v3s0-1 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="#748873" d="M35 118a14 14 0 0 1-4 10 12 12 0 0 1-4 2 12 12 0 0 1-7 1 12 12 0 0 1-7-5 14 14 0 0 1-3-8 15 15 0 0 1 1-5 14 14 0 0 1 4-6 12 12 0 0 1 10-2 12 12 0 0 1 7 4 14 14 0 0 1 3 6v3s0-1 0 0"/>
+    <path fill="none" stroke="#748873" d="M35 118a14 14 0 0 1-4 10 12 12 0 0 1-4 2 12 12 0 0 1-7 1 12 12 0 0 1-7-5 14 14 0 0 1-3-8 15 15 0 0 1 1-5 14 14 0 0 1 4-6 12 12 0 0 1 10-2 12 12 0 0 1 7 4 14 14 0 0 1 3 6v3s0-1 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="#748873" d="M129 140a14 14 0 0 1-5 10 12 12 0 0 1-4 3 12 12 0 0 1-6 0 12 12 0 0 1-8-4 14 14 0 0 1-3-9 15 15 0 0 1 1-4 14 14 0 0 1 4-6 12 12 0 0 1 10-3 12 12 0 0 1 8 5 14 14 0 0 1 2 6l1 2c0 1 0 0 0 0"/>
+    <path fill="none" stroke="#748873" d="M129 140a14 14 0 0 1-5 10 12 12 0 0 1-4 3 12 12 0 0 1-6 0 12 12 0 0 1-8-4 14 14 0 0 1-3-9 15 15 0 0 1 1-4 14 14 0 0 1 4-6 12 12 0 0 1 10-3 12 12 0 0 1 8 5 14 14 0 0 1 2 6l1 2c0 1 0 0 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="none" stroke="#748873" stroke-width="4" d="M77 27 62 58m15-31L62 58"/>
+    <path fill="#748873" fill-rule="evenodd" d="M62 58V43l11 5-11 10"/>
+    <path fill="none" stroke="#748873" stroke-width="4" d="M62 58V43m0 15V43m0 0 11 5m-11-5 11 5m0 0L62 58m11-10L62 58m0 0s0 0 0 0m0 0s0 0 0 0"/>
+  </g>
+  <g stroke-linecap="round">
+    <path fill="none" stroke="#748873" stroke-width="4" d="m50 77-20 31m20-31-20 31"/>
+    <path fill="#748873" fill-rule="evenodd" d="m30 108 2-15 11 7-13 8"/>
+    <path fill="none" stroke="#748873" stroke-width="4" d="m30 108 2-15m-2 15 2-15m0 0 11 7m-11-7 11 7m0 0-13 8m13-8-13 8m0 0s0 0 0 0m0 0s0 0 0 0"/>
+  </g>
+</svg>)DELIM"};
+}

@@ -27,7 +27,6 @@ int main(int argc, char ** argv) {
     std::string input = getInputOrErrorExit(opts);
 
     // MAIN ENTRY POINT
-
     while (true) {
         Digraph digraph;
         digraph.isExplain = opts.isExplain;
@@ -36,9 +35,7 @@ int main(int argc, char ** argv) {
             std::vector<Token> tokens = tokenizer(input);
             auto [rules, facts, queries] = parseTokens(tokens);
             digraph = makeDigraph(facts, rules);
-            if (!opts.isOpenWorldAssumption) {
-                digraph.applyClosedWorldAssumption();
-            }
+            digraph.applyWorldAssumption(opts.isOpenWorldAssumption);
 
             auto [conclusion, explanation, isError] = digraph.solveEverythingNoThrow(queries);
 
@@ -46,8 +43,8 @@ int main(int argc, char ** argv) {
                 std::cout << digraph.toDot();
                 break;
             } else if(opts.isExplain) {
-                std::cout << "CONCLUSION\n"  << conclusion << std::endl
-                          << "EXPLANATION\n" << explanation << std::endl;
+                std::cout << "CONCLUSION\n"  << conclusion << "\n"
+                          << "EXPLANATION\n" << explanation << "\n";
             } else {
                 std::cout << conclusion;
             }
