@@ -10,6 +10,7 @@ PASSED=0
 TOTAL=0
 
 for file in tests/shouldNotWork/*.txt; do
+    echo TESTING FILE $file
     TOTAL=$((TOTAL + 1))
     ./expert-system "$file" && {
         # add color red to the output

@@ -83,9 +83,10 @@ void WebServer::registerGetRoutes() {
                 digraph.applyClosedWorldAssumption();
             }
 
-            auto [conclusion, explanation] = digraph.solveEverythingNoThrow(queries);
+            auto [conclusion, explanation, isError] = digraph.solveEverythingNoThrow(queries);
             report << "CONCLUSION\n"  << conclusion << "\n\n"
                    << "EXPLANATION\n" << explanation << "\n";
+            (void)isError;
 
         } catch (std::exception &e) {
             report << "Error: " << e.what() << std::endl;

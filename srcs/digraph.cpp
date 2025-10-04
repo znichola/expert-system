@@ -6,19 +6,20 @@
 Digraph::SolveRes Digraph::solveEverythingNoThrow(const std::vector<Query> &queries) {
     std::ostringstream conclusion;
     std::ostringstream explanation;
-
+    bool isError = false;
     for (const auto &query : queries) {
         try {
             auto res = solveForFact(query.label);
             conclusion << query.label << " is " << res << std::endl;
         } catch (const std::exception &e) {
             conclusion << query << " Error: " << e.what() << std::endl;
+            isError = true;
         }
     }
     if (isExplain) {
         explanation << this->explanation.str();
     }
-    return {conclusion.str(), explanation.str()};
+    return {conclusion.str(), explanation.str(), isError};
 }
 
 

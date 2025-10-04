@@ -169,6 +169,7 @@ struct Digraph {
     struct SolveRes {
         std::string conlusion;
         std::string explanation;
+        bool isError;
     };
 
     FactsMap facts;

@@ -32,7 +32,7 @@ int main(int argc, char ** argv) {
     while (true) {
         Digraph digraph;
         digraph.isExplain = opts.isExplain;
-    
+
         try {
             std::vector<Token> tokens = tokenizer(input);
             auto [rules, facts, queries] = parseTokens(tokens);
@@ -41,17 +41,24 @@ int main(int argc, char ** argv) {
                 digraph.applyClosedWorldAssumption();
             }
 
-            auto [conclusion, explanation] = digraph.solveEverythingNoThrow(queries);
+            auto [conclusion, explanation, isError] = digraph.solveEverythingNoThrow(queries);
 
             if (opts.isDot) {
                 std::cout << digraph.toDot();
                 break;
+            } else if(opts.isExplain) {
+                std::cout << "CONCLUSION\n"  << conclusion << std::endl
+                          << "EXPLANATION\n" << explanation << std::endl;
             } else {
-                std::cout << "CONCLUSION\n"  << conclusion << "\n\n"
-                          << "EXPLANATION\n" << explanation << "\n";
+                std::cout << conclusion;
+            }
+
+            if (isError) {
+                return 1;
             }
         } catch (std::exception &e) {
             std::cerr << "Error: " << e.what() << std::endl;
+            return 1;
         }
         if (opts.isInteractive) {
             std::cout << "Do you want to change the facts and re-evaluate? (y/n): ";
