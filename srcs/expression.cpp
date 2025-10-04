@@ -32,10 +32,10 @@ bool Expr::isValidRule() const {
     }
 
     // check rhs is a "simple expression" just a value or an "and", "or", "xor" 
-    ValueGetter g; std::visit(g, *this);
-    if (g.rhs) {
-        return g.rhs.value().isSimpleExpr();
-    }
+    // ValueGetter g; std::visit(g, *this);
+    // if (g.rhs) {
+    //     return g.rhs.value().isSimpleExpr();
+    // }
 
     return true;
 }

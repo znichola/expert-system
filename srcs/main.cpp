@@ -8,7 +8,6 @@
 #include "server.hpp"
 
 
-std::string getStdInput();
 InputOptions parseInput(int ac, char **av);
 std::string getInputOrErrorExit(const InputOptions &opts);
 std::string getNewFactsLineFromUser(std::string input);
@@ -103,23 +102,6 @@ InputOptions parseInput(int ac, char **av) {
 }
 
 
-std::string getStdInput() {
-    std::string ret;
-    std::string buff;
-    std::cout << "Enter your input (end with ';;' on a new line):" << std::endl;
-    while (std::getline(std::cin, buff)) {
-        auto pos = buff.find(";;");
-        if (pos == std::string::npos)
-            ret += buff + "\n";
-        else {
-            ret += buff.substr(0, pos);
-            break ;
-        }
-    }
-    return ret;
-}
-
-
 std::string getNewFactsLineFromUser(std::string input) {
     std::cout << "Enter new facts line (e.g., '=AB'): ";
     std::string newFactsLine;
@@ -153,6 +135,34 @@ std::string getFileInput(char *fileName) {
     return ss.str();
 }
 
+
+std::string getStdInput() {
+    std::string ret;
+    std::string buff;
+    std::cout << "Enter your input (end with ';;' on a new line):" << std::endl;
+    while (std::getline(std::cin, buff)) {
+        auto pos = buff.find(";;");
+        if (pos == std::string::npos)
+            ret += buff + "\n";
+        else {
+            ret += buff.substr(0, pos);
+            break ;
+        }
+    }
+    return ret;
+}
+
+
+std::string getInputOrErrorExit(const InputOptions &opts) {
+    try {
+        return opts.file == nullptr ? getStdInput() : getFileInput(opts.file);
+    } catch (std::exception &e) {
+        std::cerr << "Startup error | " << e.what() << std::endl;
+        exit(1);
+    }
+}
+
+
 bool isHelpPrint(const InputOptions &opts , char *argv0) {
     if (!opts.isHelp)
         return false;
@@ -172,15 +182,6 @@ bool isHelpPrint(const InputOptions &opts , char *argv0) {
     << std::endl;
 
     return true;
-}
-
-std::string getInputOrErrorExit(const InputOptions &opts) {
-    try {
-        return opts.file == nullptr ? getStdInput() : getFileInput(opts.file);
-    } catch (std::exception &e) {
-        std::cerr << "Startup error | " << e.what() << std::endl;
-        exit(1);
-    }
 }
 
 bool isServerLaunch(const InputOptions &opts) {

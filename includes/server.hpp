@@ -20,6 +20,7 @@ public:
 private:
     int server_fd;
     const InputOptions opts;
+    std::string prefillRuleset;
 
     enum class Status { OK=200, NOT_FOUND=404, SERVER_ERROR=500 };
     

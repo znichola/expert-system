@@ -22,6 +22,8 @@ void handleSigint(int) {
 }
 
 WebServer::WebServer(const InputOptions &opts) : opts(opts) {
+    prefillRuleset = opts.file ? getFileInput(opts.file) : "";
+
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) { perror("socket"); exit(1); }
 
@@ -53,7 +55,7 @@ void WebServer::registerGetRoutes() {
         body << "<h1>Expert System</h1>\n"
         << "<p>Enter your ruleset here</p>\n"
         << "<form action=\"evaluate\" method=\"get\">\n"
-        << "    <textarea name=\"rules\" placeholder=\"Enter your ruleset here...\"></textarea><br>\n"
+        << "    <textarea name=\"rules\" placeholder=\"Enter your ruleset here...\">" << prefillRuleset << "</textarea><br>\n"
         << "    <button type=\"submit\">Submit</button>\n"
         << "</form>\n";
         return constructHTMLResponse(Status::OK, body.str());
@@ -185,6 +187,7 @@ std::string WebServer::constructHTMLResponse(Status status, const std::string& b
 void WebServer::start() {
     g_server = this;
     std::signal(SIGINT, handleSigint);
+
     while (running) {
         int client = accept(server_fd, nullptr, nullptr);
         if (client < 0) {
