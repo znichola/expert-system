@@ -12,6 +12,19 @@
 # include <set>
 # include "expression.hpp"
 
+struct InputOptions {
+    char *file = nullptr;
+    int port = 7711;
+    bool isHelp = false;
+    bool isServer = false;
+    bool isExplain = false;
+    bool isDot = false;
+    bool isInteractive = false;
+    bool isOpenWorldAssumption = false;
+};
+
+std::string getFileInput(char *fileName);
+
 using std::string;
 using std::vector;
 
@@ -152,10 +165,19 @@ inline std::ostream& operator<<(std::ostream& os, const Query& q) {
 struct Digraph {
     using FactsMap = std::unordered_map<char, Fact>;
     using RulesMap = std::unordered_map<std::string, Rule>;
+    
+    struct SolveRes {
+        std::string conlusion;
+        std::string explanation;
+    };
 
     FactsMap facts;
     RulesMap rules;
     std::set<char> solving_stack; // Add this for cycle detection
+    bool isExplain = false;
+    bool isClosedWorldAssumption = true;
+    std::ostringstream explanation;
+
 //    FactMap  questFacts; // facts for which a search is already launched
     int countDeterminedAntecedents(const std::string& rule_id);
     void addFact(const Fact &fact);
@@ -165,17 +187,18 @@ struct Digraph {
 
     std::string toString() const;
     std::string toDot() const;
-    std::vector<char> trueFacts() const;
 
     // These two functions are mutually recursive
-    Fact::State solveForFact(const char fact_id, bool isExplain = false);
-    Fact::State solveRule(const std::string &rule_id, bool isExplain = false);
+    Fact::State solveForFact(const char fact_id);
+    Fact::State solveRule(const std::string &rule_id);
 
-    bool isFactInAmbiguousConclusion(char fact_id);
+    bool isFactInAmbiguousConclusion(char fact_id) const;
     void setExprVarsToState(const Expr &expr, const Fact::State state);
 
-    Fact::State solveExpr(const Expr &expr, bool isExplain = false);
+    Fact::State solveExpr(const Expr &expr);
 
+    SolveRes solveEverythingNoThrow(const std::vector<Query> &queries);
+    void applyClosedWorldAssumption();
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {

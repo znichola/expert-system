@@ -7,7 +7,7 @@ class WebServer {
 public:
     using Handler = std::function<std::string(const std::string& queryString)>;
 
-    WebServer(int port = 8080);
+    WebServer(const InputOptions &opts);
     ~WebServer();
 
     // Register routes
@@ -19,6 +19,7 @@ public:
 
 private:
     int server_fd;
+    const InputOptions opts;
 
     enum class Status { OK=200, NOT_FOUND=404, SERVER_ERROR=500 };
     

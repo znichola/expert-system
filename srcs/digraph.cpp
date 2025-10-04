@@ -2,6 +2,38 @@
 
 #include "expert-system.hpp"
 
+
+Digraph::SolveRes Digraph::solveEverythingNoThrow(const std::vector<Query> &queries) {
+    std::ostringstream conclusion;
+    std::ostringstream explanation;
+
+    for (const auto &query : queries) {
+        try {
+            auto res = solveForFact(query.label);
+            conclusion << query.label << " is " << res << std::endl;
+        } catch (const std::exception &e) {
+            conclusion << query << " Error: " << e.what() << std::endl;
+        }
+    }
+    if (isExplain) {
+        explanation << this->explanation.str();
+    }
+    return {conclusion.str(), explanation.str()};
+}
+
+
+void Digraph::applyClosedWorldAssumption() {
+    for (auto &[fact_id, fact]: facts) {
+        if (fact.state == Fact::State::Undetermined && fact.consequent_rules.empty()) {
+            if (isExplain) {
+                explanation << "Applying Closed World Assumption: " << fact_id << " = False (no rules can prove it)" << std::endl;
+            }
+            fact.state = Fact::State::False;
+        }
+    }
+}
+
+
 std::string Digraph::toString() const {
     std::string res = "=== Digraph State ===\n";
 
@@ -69,7 +101,7 @@ std::string Digraph::toDot() const {
     return ss.str();
 }
 
-bool Digraph::isFactInAmbiguousConclusion(char fact_id) {
+bool Digraph::isFactInAmbiguousConclusion(char fact_id) const {
     auto fact_it = facts.find(fact_id);
     if (fact_it == facts.end()) return false;
     
@@ -268,10 +300,20 @@ void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
     // else throw not handled yet
 }
 
-Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
+Fact::State Digraph::solveForFact(const char fact_id) {
     auto f = facts.find(fact_id);
     if (f == facts.end()){
-        throw std::runtime_error("Fact not found, impossible to solve!");
+        if (isClosedWorldAssumption) {
+            if (isExplain) {
+                explanation << "Applying Closed World Assumption: " << fact_id << " = False" << std::endl;
+            }
+            return Fact::State::False;
+        } else {
+            if (isExplain) {
+                explanation << "Applying Open World Assumption: " << fact_id << " = Undetermined" << std::endl;
+            }
+            return Fact::State::Undetermined;
+        }
     }
 
     Fact &fact(f->second);
@@ -279,7 +321,7 @@ Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
     // Check for cycle
     if (solving_stack.find(fact_id) != solving_stack.end()) {
         if (isExplain) {
-            std::cout << "Cycle detected for fact " << fact_id << ", deferring to other rules" << std::endl;
+            explanation << "Cycle detected for fact " << fact_id << ", deferring to other rules" << std::endl;
         }
         // Don't set to False immediately - return undetermined and let other rules try
         return Fact::State::Undetermined;
@@ -290,9 +332,9 @@ Fact::State Digraph::solveForFact(const char fact_id, bool isExplain) {
 
     for (const auto &r : fact.consequent_rules) {
         if (isExplain) {
-            std::cout << "solveForFact " << fact_id << ": solving " << r << std::endl;
+            explanation << "solveForFact " << fact_id << ": solving " << r << std::endl;
         }
-        solveRule(r, isExplain);
+        solveRule(r);
     }
 
     // Remove from solving stack
@@ -319,24 +361,23 @@ int Digraph::countDeterminedAntecedents(const std::string& rule_id) {
     return determined_count;
 }
 
-Fact::State Digraph::solveRule(const std::string &rule_id, bool isExplain) {
+Fact::State Digraph::solveRule(const std::string &rule_id) {
     auto r = rules.find(rule_id);
     if (r == rules.end()) {
         throw std::runtime_error("Rule not found!");
     }
 
     Rule &rule(r->second);
-    auto res = solveExpr(rule.expr, isExplain);
+    auto res = solveExpr(rule.expr);
     if (isExplain) {
-        std::cout << "solveRule " << rule_id << ": result " << res << std::endl;
+        explanation << "solveRule " << rule_id << ": result " << res << std::endl;
     }
     return res;
 }
 
-Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
+Fact::State Digraph::solveExpr(const Expr &expr) {
     struct Solver {
         Digraph &digraph;
-        bool isExplain;
 
         Fact::State operator()(const Empty &)
             {return Fact::State::Undetermined;}
@@ -348,20 +389,20 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
                 throw std::runtime_error("Fact not found in digraph!");
             }
 
-            if (isExplain) {
-                std::cout << "IN Var " << v << " "  << it->second.state << std::endl;
+            if (digraph.isExplain) {
+                digraph.explanation << "IN Var " << v << " "  << it->second.state << std::endl;
             }
 
             if (it->second.state == Fact::State::Undetermined) {
-                digraph.solveForFact(it->second.id, isExplain);
+                digraph.solveForFact(it->second.id);
             }
             return it->second.state;
         }
 
         Fact::State operator()(const Not &n)
         {
-            if (isExplain) {
-                std::cout << "IN Not" << n << std::endl;
+            if (digraph.isExplain) {
+                digraph.explanation << "IN Not" << n << std::endl;
             }
             return visit(*this, n.child()) == Fact::State::True
                 ? Fact::State::False
@@ -372,8 +413,8 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
 
         Fact::State operator()(const And &n)
         {
-            if (isExplain) {
-                std::cout << "IN And " << n << std::endl;
+            if (digraph.isExplain) {
+                digraph.explanation << "IN And " << n << std::endl;
             }
             Fact::State lhs = visit(*this, n.lhs());
             Fact::State rhs = visit(*this, n.rhs());
@@ -388,8 +429,8 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
 
         Fact::State operator()(const Or &n)
         {
-            if (isExplain) {
-                std::cout << "IN Or " << n << std::endl;
+            if (digraph.isExplain) {
+                digraph.explanation << "IN Or " << n << std::endl;
             }
             Fact::State lhs = visit(*this, n.lhs());
             Fact::State rhs = visit(*this, n.rhs());
@@ -404,8 +445,8 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
 
         Fact::State operator()(const Xor &n)
         {
-            if (isExplain) {
-                std::cout << "IN Xor " << n << std::endl;
+            if (digraph.isExplain) {
+                digraph.explanation << "IN Xor " << n << std::endl;
             }
             Fact::State lhs = visit(*this, n.lhs());
             Fact::State rhs = visit(*this, n.rhs());
@@ -421,22 +462,22 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
         // (A ⇒ B) ⇔ (¬A ∨ B)
         Fact::State operator()(const Imply &n)
         {
-            if (isExplain) {
-                std::cout << "IN Imply " << n << std::endl;
+            if (digraph.isExplain) {
+                digraph.explanation << "IN Imply " << n << std::endl;
             }
             
             Expr lhs_real = n.lhs();
             Expr rhs_real = n.rhs();
             Fact::State lhs_result = visit(*this, lhs_real);
             
-            if (isExplain) {
-                std::cout << "Imply: LHS (" << lhs_real << ") = " << lhs_result << std::endl;
+            if (digraph.isExplain) {
+                digraph.explanation << "Imply: LHS (" << lhs_real << ") = " << lhs_result << std::endl;
             }
             
             // If antecedent is True, consequent must be True
             if (lhs_result == Fact::State::True) {
-                if (isExplain) {
-                    std::cout << "Setting " << rhs_real << " to True (antecedent is True)" << std::endl;
+                if (digraph.isExplain) {
+                    digraph.explanation << "Setting " << rhs_real << " to True (antecedent is True)" << std::endl;
                 }
                 digraph.setExprVarsToState(rhs_real, Fact::State::True);
                 return Fact::State::True;
@@ -455,13 +496,13 @@ Fact::State Digraph::solveExpr(const Expr &expr, bool isExplain) {
         Fact::State operator()(const Iff &n)
         {
             (void)n;
-            if (isExplain) {
-                std::cout << "WARNING: Iff operator called - should have been converted to Imply rules" << std::endl;
+            if (digraph.isExplain) {
+                digraph.explanation << "WARNING: Iff operator called - should have been converted to Imply rules" << std::endl;
             }
             throw std::runtime_error("Iff operator should not be directly evaluated");
         }
     };
-    return std::visit(Solver{*this, isExplain}, expr);
+    return std::visit(Solver{*this}, expr);
 }
 
 

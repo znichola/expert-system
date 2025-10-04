@@ -21,7 +21,7 @@ void handleSigint(int) {
     exit(0);
 }
 
-WebServer::WebServer(int port) {
+WebServer::WebServer(const InputOptions &opts) : opts(opts) {
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) { perror("socket"); exit(1); }
 
@@ -32,12 +32,12 @@ WebServer::WebServer(int port) {
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(port);
+    addr.sin_port = htons(opts.port);
 
     if (bind(server_fd, (sockaddr*)&addr, sizeof(addr)) < 0) {perror("bind"); exit(1); }
     if (listen(server_fd, 10) < 0) { perror("listen"); exit(1); }
 
-    std::cout << "Server listening on port " << port << "...\n";
+    std::cout << "Server listening on port " << opts.port << "...\n";
 
     registerGetRoutes();
 }
@@ -69,33 +69,35 @@ void WebServer::registerGetRoutes() {
             rules = "# No rules submitted.";
         }
 
-        std::ostringstream conclusion;
+        std::ostringstream report;
         std::string img;
         Digraph digraph;
+        digraph.isExplain = opts.isExplain;
 
         try {
             std::vector<Token> tokens = tokenizer(rules);
             auto [rules, facts, queries] = parseTokens(tokens);
             digraph = makeDigraph(facts, rules);
-
-            for (const auto &query : queries) {
-                auto res = digraph.solveForFact(query.label, false);
-                conclusion << query.label << " is " << res << std::endl;
+            img = genGraphImg(digraph);
+            if (!opts.isOpenWorldAssumption) {
+                digraph.applyClosedWorldAssumption();
             }
 
+            auto [conclusion, explanation] = digraph.solveEverythingNoThrow(queries);
+            report << "CONCLUSION\n"  << conclusion << "\n\n"
+                   << "EXPLANATION\n" << explanation << "\n";
 
         } catch (std::exception &e) {
-            conclusion << "Error: " << e.what() << std::endl;
+            report << "Error: " << e.what() << std::endl;
         }
 
-        img = genGraphImg(digraph);
 
         std::ostringstream body;
         body << "<h1>Evaluation</h1>\n"
             << "<p>Submitted rules</p>\n"
             << "<pre>" << rules << "</pre>\n"
-            << "<p>Conclusions</p>\n"
-            << "<pre>" << conclusion.str() << "</pre>\n"
+            << "<p>RESULTS</p>\n"
+            << "<pre>" << report.str() << "</pre>\n"
             << "<p>Node digraph</p>"
             << img
             << "<a href=\"/\">Back</a>\n";

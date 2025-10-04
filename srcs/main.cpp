@@ -7,47 +7,14 @@
 #include "parser.hpp"
 #include "server.hpp"
 
-struct InputOptions {
-    bool isHelp = false;
-    char *file = nullptr;
-    bool isServer = false;
-    bool isExplain = false;
-    bool isDot = false;
-    bool isFacts = false;
-};
-
 
 std::string getStdInput();
-std::string getFileInput(char *fileName);
 InputOptions parseInput(int ac, char **av);
-
-bool isHelpPrint(const InputOptions &opts, char *argv0);
 std::string getInputOrErrorExit(const InputOptions &opts);
+std::string getNewFactsLineFromUser(std::string input);
+bool isHelpPrint(const InputOptions &opts, char *argv0);
 bool isServerLaunch(const InputOptions &opts);
 
-std::string getNewFactsLineFromUser(std::string input)
-{
-    std::cout << "Enter new facts line (e.g., '=AB'): ";
-    std::string newFactsLine;
-    std::getline(std::cin, newFactsLine);
-    // Replace or add the facts line in the input
-    std::istringstream iss(input);
-    std::string line;
-    std::string updatedInput;
-    bool foundFactsLine = false;
-    while (std::getline(iss, line)) {
-        if (!line.empty() && line[0] == '=') {
-            updatedInput += newFactsLine + "\n";
-            foundFactsLine = true;
-        } else {
-            updatedInput += line + "\n";
-        }
-    }
-    if (!foundFactsLine) {
-        updatedInput += newFactsLine + "\n";
-    }
-    return updatedInput;
-}
 
 int main(int argc, char ** argv) {
     InputOptions opts = parseInput(argc, argv);
@@ -57,110 +24,46 @@ int main(int argc, char ** argv) {
 
     if (isServerLaunch(opts))
         return 0;
-    std::string input;
-    try {
-        input = getInputOrErrorExit(opts);
-        if (input.empty())
-        {
-            std::cerr << "No input provided, exiting." << std::endl;
-            return 1;
-        }
-    } catch (std::exception &e) {
-        std::cerr << "Startup error | " << e.what() << std::endl;
-        return 1;
-    }
+
+    std::string input = getInputOrErrorExit(opts);
+
     // MAIN ENTRY POINT
-    Digraph digraph;
-    bool userWantToChangeFacts = true;
-    while (userWantToChangeFacts) {
+
+    while (true) {
+        Digraph digraph;
+        digraph.isExplain = opts.isExplain;
+    
         try {
             std::vector<Token> tokens = tokenizer(input);
             auto [rules, facts, queries] = parseTokens(tokens);
             digraph = makeDigraph(facts, rules);
-
-            // Iterative solving with Closed World Assumption
-            bool changed = true;
-            int max_iterations = 1; // Prevent infinite loops
-            int iteration = 0;
-
-            while (changed && iteration < max_iterations) {
-                changed = false;
-                iteration++;
-                
-                if (opts.isExplain) {
-                    std::cout << "=== Iteration " << iteration << " ===" << std::endl;
-                }
-                
-                // First: Apply Closed World Assumption to facts with no consequent rules
-                for (auto &[fact_id, fact] : digraph.facts) {
-                    if (fact.state == Fact::State::Undetermined && fact.consequent_rules.empty()) {
-                        if (opts.isExplain) {
-                            std::cout << "Applying Closed World Assumption: " << fact_id << " = False (no rules can prove it)" << std::endl;
-                        }
-                        fact.state = Fact::State::False;
-                        changed = true;
-                    }
-                }
-
-                // Second: Try to solve queries with current facts
-                for (const auto &query : queries) {
-                    auto it = digraph.facts.find(query.label);
-                    if (it != digraph.facts.end()) {
-                        auto old_state = it->second.state;
-                        digraph.solveForFact(query.label, opts.isExplain);
-                        if (it->second.state != old_state) {
-                            changed = true;
-                        }
-                    } else {
-                        // Query fact doesn't exist in digraph - this shouldn't happen
-                        // but handle it gracefully
-                        if (opts.isExplain) {
-                            std::cout << "Warning: Query fact " << query.label << " not found in digraph" << std::endl;
-                        }
-                    }
-                }
-                
-                // Third: Apply CWA to remaining undetermined facts that couldn't be proven
-                for (auto &[fact_id, fact] : digraph.facts) {
-                    if (fact.state == Fact::State::Undetermined) {
-                        // Check if this fact is not in an ambiguous conclusion
-                        if (!digraph.isFactInAmbiguousConclusion(fact_id)) {
-                            if (opts.isExplain) {
-                                std::cout << "Applying Closed World Assumption: " << fact_id << " = False (couldn't be proven)" << std::endl;
-                            }
-                            fact.state = Fact::State::False;
-                            changed = true;
-                        }
-                    }
-                }
+            if (!opts.isOpenWorldAssumption) {
+                digraph.applyClosedWorldAssumption();
             }
-            // Display final results
-            for (const auto &query : queries) {
-                auto it = digraph.facts.find(query.label);
-                if (it != digraph.facts.end()) {
-                    std::cout << query.label << " is " << it->second.state << std::endl;
-                } else {
-                    std::cout << query.label << " is False" << std::endl;
-                }
+
+            auto [conclusion, explanation] = digraph.solveEverythingNoThrow(queries);
+
+            if (opts.isDot) {
+                std::cout << digraph.toDot();
+                break;
+            } else {
+                std::cout << "CONCLUSION\n"  << conclusion << "\n\n"
+                          << "EXPLANATION\n" << explanation << "\n";
             }
         } catch (std::exception &e) {
             std::cerr << "Error: " << e.what() << std::endl;
-            // TODO remove this print
-            // Print all facts
-            // for (const auto &[fact_id, fact] : digraph.facts) {
-            //     std::cout << fact_id << " is " << fact.state << std::endl;
-            // }
-            return 1;
         }
-        if (!opts.isFacts)
-            break;
-        std::cout << "Do you want to change the facts and re-evaluate? (y/n): ";
-        std::string answer;
-        std::getline(std::cin, answer);
-        if (answer != "y" && answer != "Y") {
-            userWantToChangeFacts = false;
+        if (opts.isInteractive) {
+            std::cout << "Do you want to change the facts and re-evaluate? (y/n): ";
+            std::string answer;
+            std::getline(std::cin, answer);
+            if (answer != "y" && answer != "Y") {
+                break;
+            } else {
+                input = getNewFactsLineFromUser(input);
+            }
         } else {
-            input = getNewFactsLineFromUser(input);
+            break;
         }
     }
     return 0;
@@ -174,14 +77,18 @@ InputOptions parseInput(int ac, char **av) {
         std::string s(av[i]);
         if (s == "--help" || s == "-h")
             res.isHelp = true;
-        if (s == "--server" || s == "-s")
+        else if (s == "--server" || s == "-s")
             res.isServer = true;
-        if (s == "--explain" || s == "-e")
+        else if (s == "--explain" || s == "-e")
             res.isExplain = true;
-        if (s == "--dot" || s == "-d")
+        else if (s == "--dot" || s == "-d")
             res.isDot = true;
-        if (s == "--facts" || s == "-f")
-            res.isFacts = true;
+        else if (s == "--interactive" || s == "-i")
+            res.isInteractive = true;
+        else if (s == "--openWorldAssumption")
+            res.isOpenWorldAssumption = true;
+        else if (s.starts_with("--port="))
+            res.port = std::stoi(s.substr(7));
         else
             res.file = av[i];
     }
@@ -206,6 +113,30 @@ std::string getStdInput() {
 }
 
 
+std::string getNewFactsLineFromUser(std::string input) {
+    std::cout << "Enter new facts line (e.g., '=AB'): ";
+    std::string newFactsLine;
+    std::getline(std::cin, newFactsLine);
+    // Replace the facts line in the input
+    std::istringstream iss(input);
+    std::string line;
+    std::string updatedInput;
+    bool foundFactsLine = false;
+    while (std::getline(iss, line)) {
+        if (!line.empty() && line[0] == '=') {
+            updatedInput += newFactsLine + "\n";
+            foundFactsLine = true;
+        } else {
+            updatedInput += line + "\n";
+        }
+    }
+    if (!foundFactsLine) {
+        updatedInput += newFactsLine + "\n";
+    }
+    return updatedInput;
+}
+
+
 std::string getFileInput(char *fileName) {
     std::ifstream file(fileName);
     if (!file) throw std::runtime_error("Cannot open file \"" 
@@ -221,10 +152,16 @@ bool isHelpPrint(const InputOptions &opts , char *argv0) {
 
     std::cout << "Expert System .. in propositional calculation."
     << std::endl
-    << std::endl << "run with " << argv0 << " propositional_statments.txt"
+    << std::endl << "Usage: " << argv0 << " [options] propositional_statements.txt"
     << std::endl
-    << std::endl << "flags -h / --help    to get this help message"
-    << std::endl << "      -s / --server  luanches a webserver for an interactive interface"
+    << std::endl << "Options:"
+    << std::endl << "  -h, --help                 Show this help message and exit"
+    << std::endl << "  -s, --server               Launch a webserver for an interactive interface"
+    << std::endl << "      --port=NUMBER          Specify port for server mode (default: 7711)"
+    << std::endl << "  -e, --explain              Print explanation of the reasoning process"
+    << std::endl << "  -d, --dot                  Output reasoning as a Graphviz DOT file"
+    << std::endl << "  -i, --interactive          Enable interactive mode (modify facts after evaluation)"
+    << std::endl << "      --openWorldAssumption  Use Open World Assumption (default is Closed World)"
     << std::endl;
 
     return true;
@@ -242,7 +179,7 @@ std::string getInputOrErrorExit(const InputOptions &opts) {
 bool isServerLaunch(const InputOptions &opts) {
     if (!opts.isServer)
         return false;
-    WebServer webServer(7711);
+    WebServer webServer(opts);
     webServer.start(); // blocks on the server
     return true;
 }
