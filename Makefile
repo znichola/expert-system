@@ -30,15 +30,21 @@ INCS_PATH = includes
 SRCS	= $(addprefix $(SRCS_PATH), $(addsuffix .cpp, $(FILES)))
 OBJS	= $(addprefix $(OBJS_PATH), $(addsuffix .o, $(FILES)))
 
-GV_PREFIX = $(HOME)/graphviz
+GIT_COMMIT	:= $(shell git rev-parse --short HEAD 2>/dev/null)
+BUILD_DATE := $(shell date -u +"%Y-%m-%d %H:%M:%S UTC")
+BUILD_INFO	:= -DGIT_COMMIT="$(GIT_COMMIT)" -DBUILD_DATE="$(BUILD_DATE)"
+
+
+GV_PREFIX	= $(HOME)/graphviz
 
 # Used to build the project with/without graphvis functionality
 WITH_GRAPHVIZ := $(shell [ -f $(GV_PREFIX)/include/graphviz/gvc.h ] && echo 1 || echo 0)
 
 ifeq ($(WITH_GRAPHVIZ),1)
-    CFLAGS += -DWITH_GRAPHVIZ -I$(GV_PREFIX)/include
+    GV_INCS = -DWITH_GRAPHVIZ -I$(GV_PREFIX)/include
     GV_LIBS = -L$(GV_PREFIX)/lib -lgvc -lcgraph -lcdt -Wl,-rpath,$(GV_PREFIX)/lib
 else
+	GV_INCS =
     GV_LIBS =
 endif
 
@@ -46,10 +52,10 @@ all	: $(NAME)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c -I$(INCS_PATH) -o $@ $<
+	$(CC) $(CFLAGS) $(BUILD_INFO) -c -I$(INCS_PATH) $(GV_INCS) -o $@ $<
 
 $(NAME)	: $(OBJS) $(MAIN_OBJ)
-	$(CC) $(CFLAGS) $(OBJS) $(MAIN_OBJ) $(GV_LIBS) -o $@
+	$(CC) $(CFLAGS) $(BUILD_INFO) $(OBJS) $(MAIN_OBJ) $(GV_LIBS) -o $@
 
 clean	:
 	-rm $(OBJS) $(MAIN_OBJ)

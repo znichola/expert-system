@@ -10,7 +10,7 @@
 
 static std::string urlDecode(const std::string &src);
 static std::string genGraphImg(const Digraph &digraph);
-
+static std::string footer();
 
 WebServer* g_server = nullptr;
 bool running = true;
@@ -175,7 +175,7 @@ std::string WebServer::constructHTMLResponse(Status status, const std::string& b
              << "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
              << "  <title>Expert System</title>\n"
              << "  <style>\n"
-             << "    body { font-family: sans-serif; margin: 2em auto; text-align: center; color: #748873; background-color: #E5E0D8; max-width: 70ch; } \n"
+             << "    body { font-family: sans-serif; margin: 0 auto; text-align: center; color: #748873; background-color: #E5E0D8; max-width: 70ch; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; gap: 2rem;} \n"
              << "    textarea { width: 90%; height: 200px; margin: 1em 0; font-family: monospace; }\n"
              << "    button { padding: 0.5em 1.5em; font-size: 1em; cursor: pointer; color: #D1A980; }\n"
              << "    pre { text-align: left; overflow-x: auto; background-color: #F8F8F8; padding: 1.1em; border: solid; }\n"
@@ -184,7 +184,10 @@ std::string WebServer::constructHTMLResponse(Status status, const std::string& b
              << "  </style>\n"
              << "</head>\n"
              << "<body>\n"
+             << "<main>\n"
              << htmlBody << "\n"
+             << "</main>\n"
+             << footer() << "\n"
              << "</body>\n"
              << "</html>";
 
@@ -375,6 +378,38 @@ static std::string genGraphImg(const Digraph &digraph) {
 }
 
 #endif
+
+#define STR(x) #x
+#define XSTR(x) STR(x)
+
+static std::string footer() {
+    static const std::string git_url =
+#ifdef GIT_COMMIT
+        "https://github.com/znichola/expert-system/tree/" XSTR(GIT_COMMIT);
+#else
+        "https://github.com/znichola/expert-system";
+#endif
+
+    static const std::string git_text =
+#ifdef GIT_COMMIT
+        XSTR(GIT_COMMIT);
+#else
+        "github";
+#endif
+
+    static const std::string build_date =
+#ifdef BUILD_DATE
+        XSTR(BUILD_DATE);
+#else
+        "unknown";
+#endif
+
+    return "<footer style='padding-bottom: 0.2em;'>"
+           "Build: <a href='" + git_url + "' style='color:#D1A980; text-decoration:none;'>" +
+           git_text +
+           "</a> &nbsp;&nbsp;|&nbsp;&nbsp; " + build_date +
+           "</footer>\n";
+}
 
 static std::string favicon() {
     return {R"DELIM(
