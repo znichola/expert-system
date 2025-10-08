@@ -16,21 +16,22 @@ struct Test {
 
 // Helper to run one test
 void runTest(const Test &t) {
-    cout << "Running test with ruleset:\n" << t.ruleSet << endl;
+
 
     auto tokens = tokenizer(t.ruleSet);
     auto [rules, facts, queries] = parseTokens(tokens);
 
     Digraph digraph = makeDigraph(facts, rules);
+    digraph.applyWorldAssumption(false);
 
     for (const auto &[label, expectedState] : t.expected) {
         auto res = digraph.solveForFact(label);
 
-        cout << "Query " << label << " got " << res
-             << " (expected " << expectedState << ")\n";
-
         if (res != expectedState) {
-            cout << RED << "KO " << RESET << label << endl;
+            cout << "Running test with ruleset:\n" << t.ruleSet << endl
+                 << "Query " << label << " got " << res
+                 << " (expected " << expectedState << ")\n"
+                 << RED << "KO " << RESET << label << endl;
         } else {
             cout << GREEN << "OK" << RESET << endl;
         }
@@ -44,24 +45,55 @@ int main() {
 
     std::vector<Test> tests = {
         {
-            "A=>B#hello\n=A\n?B",
+            "A=>B\n=A\n?B",
             { {'B', Fact::State::True} }
         },
         {
-            "!A=>B#hello\n=A\n?B",
+            "A|B=>C\n=A\n?C",
+            { {'C', Fact::State::True} }
+        },
+        {
+            "A|B=>C\n=B\n?C",
+            { {'C', Fact::State::True} }
+        },
+        {
+            "C+E=>F\nH+S=>K\nF=>G\nK=>Y\n=CE\n?G",
+            { {'G', Fact::State::True} }
+        },
+        {
+            "A=>B|C\n=A\n?C", // Undetermined example from the docs
+            { {'B', Fact::State::Undetermined}, {'C', Fact::State::Undetermined}}
+        },
+        {
+            "A|F=>B\n=A\n?F", // Closed world, F is not part of any implicaiton solution
+            { {'F', Fact::State::False}}
+        },
+        {
+            "A=>B\n=A\n?F", // Closed world, should be false
+            { {'F', Fact::State::False}}
+        },
+        {
+            "!A=>B\n=A\n?B", // should be False, because closed world,
+                             // no antecedent is true that
+                             // could prove/disprove/undecide the fact, is this correct?
             { {'B', Fact::State::False} }
         },
         {
-            "A|B=>C#hello\n=A\n?C",
-            { {'C', Fact::State::True} }
+            "A|F=>B\n=A\n?F", // Closed world, should be false
+            { {'F', Fact::State::False}}
         },
         {
-            "A|B=>C#hello\n=B\n?C",
-            { {'C', Fact::State::True} }
+            "A=>B^C\n=A\n?B", // 
+            { {'B', Fact::State::Undetermined}}
         },
         {
-            "C+E=>F#hello\nH+S=>K\nF=>G\nK=>Y\n=CE\n?G",
-            { {'G', Fact::State::True} }
+            "A=>!B\n=A\n?B", // Netation in conclusion
+            { {'B', Fact::State::False}}
+        },
+        {
+            "A=>B^C\nA=>!B\n=A\n?C", // Xor in conclusion,
+                                     // C must be true, because A is true and B is false
+            { {'A', Fact::State::True}, {'B', Fact::State::False}, {'C', Fact::State::True}}
         }
     };
 

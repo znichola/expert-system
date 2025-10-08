@@ -28,8 +28,6 @@ int main() {
     testExprReplacment();
     testDigraph();
     testDigraphViz();
-
-    testSocratiesRuleSet();
 }
 
 
@@ -110,27 +108,6 @@ void testExprReplacment() {
 
 
     cout << endl;
-}
-
-
-
-void testSocratiesRuleSet() {
-    cout << "### Socraties is a man" << endl;
-    std::vector<Rule> rules = {
-        Rule(Imply(Var('M'), And(Var('D'), Var('G'))), 3, "All men are mortal"),
-    };
-    std::vector<Fact> facts = {
-        Fact('M', Fact::State::True, 6, "He is a man"),
-    };
-
-    auto query = Query('D', 9, "Is he mortal?");
-
-    auto g = rules[0].expr.getValues();
-
-    cout << "RESS :" <<  rules[0].expr.containes(Var('G')) << endl;
-
-    (void)solve(rules, facts, query);
-
 }
 
 
