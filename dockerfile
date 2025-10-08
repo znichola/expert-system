@@ -19,7 +19,12 @@ ENV GV_PREFIX=/usr
 ENV WITH_GRAPHVIZ=1
 
 # Build the project
-RUN make all WITH_GRAPHVIZ=1 GV_INCS="-DWITH_GRAPHVIZ -I/usr/include/graphviz" GV_LIBS="-L/usr/lib -lgvc -lcgraph -lcdt -Wl,-rpath,/usr/lib"
+RUN make fclean
+RUN make all \
+    GIT_COMMIT=${GIT_COMMIT} \
+    WITH_GRAPHVIZ=1 \
+    GV_INCS="-DWITH_GRAPHVIZ -I/usr/include/graphviz" \
+    GV_LIBS="-L/usr/lib -lgvc -lcgraph -lcdt -Wl,-rpath,/usr/lib"
 
 # Expose the server port
 EXPOSE 7711
@@ -28,10 +33,10 @@ EXPOSE 7711
 ENTRYPOINT ["./expert-system", "--server", "--port=7711"]
 
 # Build the image
-# docker build -t znichola/expert-system:latest .
+# docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) -t znichola/expert-system:latest .
 
 # Test locally
 # docker run -p 7711:7711 znichola/expert-system
 
-# Push to Docker Hub
+# Push to Docker Hub (first log in to docker hub)
 # docker push znichola/expert-system:latest
