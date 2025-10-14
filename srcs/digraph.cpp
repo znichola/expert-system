@@ -282,18 +282,34 @@ void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
         return;
     }
     else if (auto xor_expr = std::get_if<Xor>(&expr)) {
-        // Xor handling
+        if (state == Fact::State::Undetermined) {
+            // Do nothing, nothing can be learnt from this, TODO: if we add fourth uninitialised state this changes
+            return ;
+        }
+        Fact::State lhs_state = solveExpr(xor_expr->lhs());
+        Fact::State rhs_state = solveExpr(xor_expr->rhs());
+
+        if (lhs_state == Fact::State::Undetermined && lhs_state == Fact::State::Undetermined) {
+            // Do nothing, nothing can be learnt from this, TODO: if we add fourth uninitialised state this changes
+            return ;
+        }
         if (state == Fact::State::True) {
-            // A ^ B = True: exactly one is true, but we don't know which
-            // Can't determine individual values without more info
-            // set both to undetermined
-            setExprVarsToState(xor_expr->lhs(), Fact::State::Undetermined);
-            setExprVarsToState(xor_expr->rhs(), Fact::State::Undetermined);
+            // A ^ B = True: exactly one must be true
+                 if (lhs_state == Fact::State::True) { setExprVarsToState(xor_expr->rhs(), Fact::State::False); }
+            else if (rhs_state == Fact::State::True) { setExprVarsToState(xor_expr->lhs(), Fact::State::False); }
+
+            else if (lhs_state == Fact::State::False) { setExprVarsToState(xor_expr->rhs(), Fact::State::True); }
+            else if (rhs_state == Fact::State::False) { setExprVarsToState(xor_expr->lhs(), Fact::State::True); }
+
+            // Undetermined cases are handled above if you think about it
+
         } else if (state == Fact::State::False) {
-            // A ^ B = False: either both true or both false
-            // Can't determine individual values without more info
-            setExprVarsToState(xor_expr->lhs(), Fact::State::Undetermined);
-            setExprVarsToState(xor_expr->rhs(), Fact::State::Undetermined);
+            // A ^ B = False: both true or both false
+                 if (lhs_state == Fact::State::True) { setExprVarsToState(xor_expr->rhs(), Fact::State::True); }
+            else if (rhs_state == Fact::State::True) { setExprVarsToState(xor_expr->lhs(), Fact::State::True); }
+
+            else if (lhs_state == Fact::State::False) { setExprVarsToState(xor_expr->rhs(), Fact::State::False); }
+            else if (rhs_state == Fact::State::False) { setExprVarsToState(xor_expr->lhs(), Fact::State::False); }
         }
         return;
     }
