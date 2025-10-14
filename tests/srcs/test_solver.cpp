@@ -128,6 +128,16 @@ int main() {
             "A=>B+!C\n=A\n?BC",
             { {'B', Fact::State::True}, {'C', Fact::State::False}}
         },
+        {
+            "Or in conclusion, partial lhs knowledge it's false",
+            "A=>B|C\nA=>!B\n=A\n?BC",
+            { {'B', Fact::State::False}, {'C', Fact::State::True}}
+        },
+        {
+            "Negated Or in conclusion",
+            "A=>!(B|C)\n=A\n?BC",
+            { {'B', Fact::State::False}, {'C', Fact::State::False}}
+        },
     };
 
     for (const auto &t : tests) {

@@ -269,13 +269,18 @@ void Digraph::setExprVarsToState(const Expr &expr, const Fact::State state) {
     else if (auto or_expr = std::get_if<Or>(&expr)) {
         // Or handling  
         if (state == Fact::State::True) {
-            // A | B = True: we can't determine which one is true
-            // Both could be true, or just one - ambiguous
-            // set both to undetermined
-            setExprVarsToState(or_expr->lhs(), Fact::State::Undetermined);
-            setExprVarsToState(or_expr->rhs(), Fact::State::Undetermined);
+            // A | B = True: At least one must be true, so if one is false we know the other is true
+            Fact::State lhs_state = solveExpr(or_expr->lhs());
+            Fact::State rhs_state = solveExpr(or_expr->rhs());
+    
+                 if (lhs_state == Fact::State::False) { setExprVarsToState(or_expr->rhs(), Fact::State::True); }
+            else if (rhs_state == Fact::State::False) { setExprVarsToState(or_expr->lhs(), Fact::State::True); }
+            else {
+                setExprVarsToState(or_expr->lhs(), Fact::State::Undetermined);
+                setExprVarsToState(or_expr->rhs(), Fact::State::Undetermined);
+            }
         } else if (state == Fact::State::False) {
-            // A | B = False means both A and B must be False
+            // A | B = False: Both A and B must be False
             setExprVarsToState(or_expr->lhs(), Fact::State::False);
             setExprVarsToState(or_expr->rhs(), Fact::State::False);
         }
