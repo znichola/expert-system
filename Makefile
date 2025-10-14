@@ -18,7 +18,7 @@ LEAKS_CHECK = valgrind
 
 EXAMPLE_FILE = example_file.txt
 
-FILES	= parser expression token solver digraph server
+FILES	= parser expression token digraph server
 
 MAIN_SRC	= srcs/main.cpp
 MAIN_OBJ	= objs/main.o
