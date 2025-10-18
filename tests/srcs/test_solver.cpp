@@ -10,7 +10,7 @@ using std::endl;
 
 // Struct for a single test case
 struct Test {
-    std::string description;                        // <--- Added description
+    std::string description;
     std::string ruleSet;                             // input rules/facts/queries
     std::unordered_map<char, Fact::State> expected;  // expected results for queries
 };

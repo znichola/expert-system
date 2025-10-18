@@ -3,3 +3,4 @@ test_parser
 test_tokenizer
 test_rules
 test_solver
+test_evaluator

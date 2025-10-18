@@ -568,6 +568,10 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
     return std::visit(Solver{*this}, expr);
 }
 
+Digraph::VarBoolMap Digraph::boolMapEvaluate(const char fact_id) {
+    (void)fact_id;
+    return {};
+}
 
 Digraph makeDigraph(
         const std::vector<Fact> &facts,
@@ -585,4 +589,5 @@ Digraph makeDigraph(
 
     return g;
 }
+
 

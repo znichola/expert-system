@@ -7,6 +7,7 @@
 # include <vector>
 # include <optional>
 # include <iostream>
+# include <map>
 
 # include "vector_helper.hpp"
 
@@ -95,7 +96,6 @@ private:
 
 struct Empty {};
 
-
 struct ValueGetter;
 
 struct Expr : std::variant<Empty, Var, Not, And, Or, Xor, Imply, Iff> {
@@ -108,7 +108,21 @@ struct Expr : std::variant<Empty, Var, Not, And, Or, Xor, Imply, Iff> {
     bool containes(const Var &var) const;
     std::vector<char> getAllFacts() const;
     std::string toString() const;
+
+    using VarMap = std::map<char, bool>;
+    bool booleanEvaluate(const VarMap &varMap) const;
 };
+
+
+inline std::ostream& operator<<(std::ostream& os, const Expr::VarMap& varMap) {
+    bool first = true;
+    for (const auto& [k, v] : varMap) {
+        if (!first) os << " ";
+        os << k << ":" << (v ? "true" : "false");
+        first = false;
+    }
+    return os;
+}
 
 using std::visit;
 

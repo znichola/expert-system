@@ -11,7 +11,7 @@ CFLAGS	+= -g3
 endif
 endif
 
-UNIT_TESTS = test_DS test_parser test_tokenizer test_rules test_solver
+UNIT_TESTS = test_DS test_parser test_tokenizer test_rules test_solver test_evaluator
 
 OBJS_PATH = objs/
 SRCS_PATH = srcs/

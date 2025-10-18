@@ -68,3 +68,52 @@ bool Expr::isSimpleExpr() const {
 
     return false;
 }
+
+// used to unpack the variant and get lhs & rhs values if they exist
+struct BooleanEvaluator {
+    const Expr::VarMap varMap;
+
+    bool operator()(const Empty&) const {
+        throw std::runtime_error("Empty node in evaluator");
+    }
+
+    bool operator()(const Var &v) const {
+        return varMap.at(v.value());
+    }
+
+    bool operator()(const Not &n) const {
+        return !std::visit(*this, n.child());
+    }
+
+    bool operator()(const And &n) const {
+        return std::visit(*this, n.lhs()) && std::visit(*this, n.rhs());
+    }
+
+    bool operator()(const Or &n) const {
+        return std::visit(*this, n.lhs()) || std::visit(*this, n.rhs());
+    }
+
+    bool operator()(const Xor &n) const {
+        return std::visit(*this, n.lhs()) ^ std::visit(*this, n.rhs());
+    }
+
+    // (A ⇒ B) ⇔ (¬A ∨ B)
+    bool operator()(const Imply &n) const {
+        bool a = std::visit(*this, n.lhs());
+        bool b = std::visit(*this, n.rhs());
+        return !a || b;
+    }
+
+    // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
+    bool operator()(const Iff &n) const {
+        bool a = std::visit(*this, n.lhs());
+        bool b = std::visit(*this, n.rhs());
+        return (!a || b) && (!b || a);
+    }
+};
+
+
+bool Expr::booleanEvaluate(const VarMap &varMap) const {
+    BooleanEvaluator ctx = {varMap};
+    return std::visit(ctx, *this);
+}

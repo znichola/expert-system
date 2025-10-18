@@ -201,6 +201,9 @@ struct Digraph {
 
     SolveRes solveEverythingNoThrow(const std::vector<Query> &queries);
     void applyWorldAssumption(bool open);
+
+    using VarBoolMap = std::map<char, std::vector<bool>>;
+    VarBoolMap boolMapEvaluate(const char fact_id);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
