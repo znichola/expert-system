@@ -138,6 +138,31 @@ int main() {
             "A=>!(B|C)\n=A\n?BC",
             { {'B', Fact::State::False}, {'C', Fact::State::False}}
         },
+        {
+            "shouldWork 9 : Xor in conclusion",
+            "A=>L^U\nL=>B\nU=>B\nB=>M\n=A\n?MLU",
+            { {'M', Fact::State::False}, {'C', Fact::State::False}}
+        },
+        {
+            "shouldWork 10 : Or in conclusion",
+            "A=>L|U\nL=>B\nU=>B\nB=>M\n=A\n?MLU",
+            { {'M', Fact::State::False}, {'C', Fact::State::False}}
+        },
+        {
+            "shouldWork 15 : circular deps",
+            "A=>B\nB=>C\nC=>D\nD=>A\n=Z\n?D",
+            { {'D', Fact::State::False}}
+        },
+        {
+            "Iff false lhs, rhs must also be false",
+            "A=>!B\nB<=>C\n=A\n?C",
+            { {'B', Fact::State::False}, {'C', Fact::State::False}}
+        },
+        {
+            "Two Implies that loop should be equivilent to a iff",
+            "A=>!B\nB=>C\nC=>B\n=A\n?C",
+            { {'B', Fact::State::False}, {'C', Fact::State::False}}
+        },
     };
 
     for (const auto &t : tests) {

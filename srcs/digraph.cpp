@@ -171,21 +171,36 @@ void Digraph::addRule(const Rule &rule) {
         throw std::runtime_error("Invalid rule: " + rule.toString());
     }
 
-    // Check if this is an Iff expression
     if (auto iff = std::get_if<Iff>(&rule.expr)) {
-        // For A <=> B, create two rules: A => B and B => A
-        Expr forward_rule = Imply(iff->lhs(), iff->rhs());
-        Expr backward_rule = Imply(iff->rhs(), iff->lhs());
-        
-        // Create and add the forward rule (A => B)
-        Rule forward_r(forward_rule, rule.line_number, rule.comment + " (forward)");
-        addRule(forward_r);
-        
-        // Create and add the backward rule (B => A)  
-        Rule backward_r(backward_rule, rule.line_number, rule.comment + " (backward)");
-        addRule(backward_r);
-        
-        return;
+        auto g = rule.expr.getValues();
+        if (g.lhs && g.rhs) {
+            Rule newRule = rule;
+
+            auto rhsLabels = g.rhs->getAllFacts();
+            for (auto const &fl : rhsLabels) {
+                auto fact = Fact(fl, Fact::State::Undetermined);
+                fact.antecedent_rules.push_back(rule.id);
+                newRule.antecedent_facts.push_back(fact.id);
+                fact.consequent_rules.push_back(rule.id);
+                newRule.consequent_facts.push_back(fact.id);
+                addFact(fact);
+            }
+
+            auto lhsLabels = g.lhs->getAllFacts();
+            for (auto const &fl : lhsLabels) {
+                auto fact = Fact(fl, Fact::State::Undetermined);
+                fact.antecedent_rules.push_back(rule.id);
+                newRule.antecedent_facts.push_back(fact.id);
+                fact.consequent_rules.push_back(rule.id);
+                newRule.consequent_facts.push_back(fact.id);
+                addFact(fact);
+            }
+            rules.insert({newRule.id, newRule});
+        }
+        else
+        {
+            throw std::runtime_error("Illegal state, rules must have lhs, rhs");
+        }
     }
 
     // Handle normal rules (non-Iff)
@@ -362,7 +377,7 @@ Fact::State Digraph::solveForFact(const char fact_id) {
         if (isExplain) {
             explanation << "solveForFact " << fact_id << ": solving " << r << std::endl;
         }
-        solveRule(r);
+        solveRule(r); // TODO do we need a check if the rule returns true, (it should always be true, I think?)
     }
 
     // Remove from solving stack
@@ -423,7 +438,7 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
             }
 
             if (it->second.state == Fact::State::Undetermined) {
-                digraph.solveForFact(it->second.id);
+                return digraph.solveForFact(it->second.id);
             }
             return it->second.state;
         }
@@ -523,12 +538,31 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
 
         // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
         Fact::State operator()(const Iff &n)
-        {
-            (void)n;
+         {
             if (digraph.isExplain) {
-                digraph.explanation << "WARNING: Iff operator called - should have been converted to Imply rules" << std::endl;
+                digraph.explanation << "In If and only if " << n << std::endl;
             }
-            throw std::runtime_error("Iff operator should not be directly evaluated");
+
+            Fact::State lhs_state = visit(*this, n.lhs());
+            Fact::State rhs_state = visit(*this, n.rhs());
+
+            if (rhs_state == lhs_state) {
+                if (digraph.isExplain) {
+                    digraph.explanation << "In Iff: both sides aready equal " << n << std::endl;
+                }
+                if (rhs_state == Fact::State::Undetermined) {
+                    return Fact::State::Undetermined;
+                }
+            } else if (lhs_state == Fact::State::Undetermined && rhs_state != Fact::State::Undetermined) {
+                digraph.setExprVarsToState(n.lhs(), rhs_state);
+            } else if (rhs_state == Fact::State::Undetermined && lhs_state != Fact::State::Undetermined) {
+                digraph.setExprVarsToState(n.rhs(), lhs_state);
+            } else {
+                std::stringstream ss;
+                ss << "Contradiction: " << n << " lhs:" << lhs_state << " must equal rhs:" << rhs_state;
+                throw std::runtime_error(ss.str()); 
+            }
+            return Fact::State::True;
         }
     };
     return std::visit(Solver{*this}, expr);

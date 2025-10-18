@@ -4,3 +4,9 @@ U => B
 B => M
 =A
 ?MLU
+
+# (A => (L | U)) + (L => B) + (U => B) + (B => M) = True
+
+# ALU|>LB>&UB>&BM>&
+
+# "(((A>(L|U))&(L>B))&(U>B))&(B>M)"
