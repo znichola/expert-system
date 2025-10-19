@@ -1,26 +1,61 @@
 #include <set>
 
 #include "expert-system.hpp"
-
+#include "vector_helper.hpp"
 
 Digraph::SolveRes Digraph::solveEverythingNoThrow(const std::vector<Query> &queries) {
     std::ostringstream conclusion;
     std::ostringstream explanation;
     bool isError = false;
+    std::map<char, Expr> compiledExpressions;
+    for (const auto &query : queries) {
+        auto e = compileExprForFact(query.label);
+        compiledExpressions.insert({query.label, e});
+    }
     for (const auto &query : queries) {
         try {
             auto res = solveForFact(query.label);
+            auto expr = compiledExpressions.at(query.label);
+            auto table = boolMapEvaluate(expr);
+            res = determinFinalState(res, table, query.label);
             conclusion << query.label << " is " << res << std::endl;
+            explanation << query.label << " ⇔ " << std::visit(PrinterFormalLogic{}, expr) << std::endl;
+            explanation << table << std::endl;
         } catch (const std::exception &e) {
             conclusion << query << " Error: " << e.what() << std::endl;
             isError = true;
         }
     }
     if (isExplain) {
-        explanation << this->explanation.str();
+        explanation << "OPERATIONS\n" << this->explanation.str();
     }
     return {conclusion.str(), explanation.str(), isError};
 }
+
+Fact::State Digraph::determinFinalState(Fact::State solverRes, const VarBoolMap &boolMap, char fact_id) {
+    const auto &values = boolMap.at(fact_id);
+
+    if (values.empty()) return solverRes;
+
+    // Determine result from the truth table
+    bool all_true = std::all_of(values.begin(), values.end(), [](bool v){ return v; });
+    bool all_false = std::all_of(values.begin(), values.end(), [](bool v){ return !v; });
+
+    Fact::State boolMapResult = all_true ? Fact::State::True : all_false ? Fact::State::False : Fact::State::Undetermined;
+
+    if (solverRes == boolMapResult) return solverRes;
+
+    if (solverRes == Fact::State::Undetermined) {
+        if (isExplain)
+            explanation << fact_id << ": Defering to truth table evaluation\n";
+        return boolMapResult;
+    }
+
+    if (isExplain)
+        explanation << fact_id << ": Oups.. solver and boolean table disagree on fact, defering to solver\n";
+    return solverRes;
+}
+
 
 
 void Digraph::applyWorldAssumption(bool open) {
@@ -390,7 +425,7 @@ Fact::State Digraph::solveForFact(const char fact_id) {
 int Digraph::countDeterminedAntecedents(const std::string& rule_id) {
     auto rule_it = rules.find(rule_id);
     if (rule_it == rules.end()) return 0;
-    
+
     auto antecedent_facts = rule_it->second.antecedent_facts;
     int determined_count = 0;
     
@@ -568,10 +603,121 @@ Fact::State Digraph::solveExpr(const Expr &expr) {
     return std::visit(Solver{*this}, expr);
 }
 
-Digraph::VarBoolMap Digraph::boolMapEvaluate(const char fact_id) {
-    (void)fact_id;
-    return {};
+Digraph::VarBoolMap Digraph::boolMapEvaluate(const Expr &expr) const {
+    // const Fact& fact = facts.at(fact_id);
+    // const Expr expr = compileExprForFact(fact_id);
+    const std::vector<char> all_facts = expr.getAllFacts();
+
+    // Separate known and undetermined facts
+    std::set<char> undetermined_set;
+    std::map<char, bool> knownValues;
+
+    for (const auto& f_id : all_facts) {
+        const auto& f = facts.at(f_id);
+        switch (f.state) {
+            case Fact::State::True:
+                knownValues[f_id] = true;
+                break;
+            case Fact::State::False:
+                knownValues[f_id] = false;
+                break;
+            case Fact::State::Undetermined:
+                undetermined_set.insert(f_id);
+                break;
+        }
+    }
+
+    // Prepare a VarBoolMap to store results for each fact ID
+    VarBoolMap results;
+
+    std::vector<char> undetermined(undetermined_set.begin(), undetermined_set.end());;
+
+    // Generate all combinations of truth assignments for undetermined facts
+    const size_t n = undetermined.size();
+    const size_t total = (1ULL << n);
+
+    for (size_t mask = 0; mask < total; ++mask) {
+        std::map<char, bool> varMap = knownValues;
+
+        // assign bits to undetermined facts
+        for (size_t i = 0; i < n; ++i) {
+            bool value = (mask >> i) & 1;
+            varMap[undetermined[i]] = value;
+        }
+
+        bool result = expr.booleanEvaluate(varMap);
+
+        // only add varMap if the result is true, the assumption is the ruleset evaluates to true!
+        if (result) {
+            for (const auto& [fid, val] : varMap) {
+                results[fid].push_back(val);
+            }
+            results['='].push_back(result);
+        }
+    }
+
+    return results;
 }
+
+
+Expr Digraph::compileExprForFact(const char fact_id) {
+    std::vector<std::string> rules_used_ids;
+    std::vector<Expr> rules_used;
+
+    // Recursive lambda that collects all rules related to a fact
+    std::function<void(const char)> ruleCollector = [&](const char f_id) {
+        const Fact &fact = facts.at(f_id);
+
+        if (fact.state == Fact::State::True || fact.state == Fact::State::False) {
+            Expr new_rule = fact.state == Fact::State::True ? Expr(Var(f_id)) : Expr(Not(Var(f_id)));
+            if (std::find(rules_used_ids.begin(), rules_used_ids.end(), new_rule.toString()) == rules_used_ids.end()) {
+                rules_used_ids.push_back(new_rule.toString());
+                rules_used.push_back(new_rule);
+            }
+            return;
+        }
+
+        for (const auto& r_id : fact.consequent_rules) {
+            const Rule &rule = rules.at(r_id);
+            
+            // Skip already processed rules to prevent infinite loops
+            if (std::find(rules_used_ids.begin(), rules_used_ids.end(), rule.expr.toString()) != rules_used_ids.end())
+                continue;
+
+            rules_used_ids.push_back(rule.expr.toString());
+            rules_used.push_back(rule.expr);
+
+            // Recursively gather rules from facts referenced requiered by this rule (antecedent)
+            for (const auto& f2_id : rule.antecedent_facts) {
+                ruleCollector(f2_id);
+            }
+        }
+    };
+
+    // Run the recursive rule collector
+    ruleCollector(fact_id);
+
+    // Compile a mega-expression that ANDs all collected rules
+    if (rules_used.empty()) {
+        if (isExplain) {
+            std::cout << "Empty ruleset when compiling\n";
+        }
+        return Var(fact_id);
+    }
+
+    Expr mega_expr = rules_used.front();
+    for (size_t i = 1; i < rules_used.size(); ++i) {
+        mega_expr = And(mega_expr, Expr(rules_used[i]));
+    }
+
+    if (isExplain) {
+        explanation << "Compiled logic expression for " << fact_id 
+        << " using " << rules_used.size() << " rules\n";
+    }
+
+    return mega_expr;
+}
+
 
 Digraph makeDigraph(
         const std::vector<Fact> &facts,

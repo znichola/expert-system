@@ -203,7 +203,9 @@ struct Digraph {
     void applyWorldAssumption(bool open);
 
     using VarBoolMap = std::map<char, std::vector<bool>>;
-    VarBoolMap boolMapEvaluate(const char fact_id);
+    VarBoolMap boolMapEvaluate(const Expr &expr) const;
+    Expr compileExprForFact(const char fact_id);
+    Fact::State determinFinalState(Fact::State solverRes, const VarBoolMap &boolMap, char fact_id);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
@@ -231,6 +233,44 @@ inline std::ostream& operator<<(std::ostream& os, const InputOptions& opt) {
         os << "File: " << opt.file << '\n';
 
     os << "=========================\n";
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Digraph::VarBoolMap& varBoolMap) {
+    if (varBoolMap.empty()) {
+        os << "(empty VarBoolMap)";
+        return os;
+    }
+
+    // Extract and sort variable names for consistent ordering
+    std::vector<char> vars;
+    for (const auto& [fact_id, _] : varBoolMap)
+        vars.push_back(fact_id);
+    std::sort(vars.begin(), vars.end());
+
+    // Determine number of rows
+    const size_t numRows = varBoolMap.begin()->second.size();
+
+    // Header row
+    for (char v : vars)
+        os << " " << v << " |";
+    os << "\n";
+
+    // Separator
+    for (size_t i = 0; i < vars.size(); ++i)
+        os << "----";
+    os << "\n";
+
+    // Rows of the truth table
+    for (size_t row = 0; row < numRows; ++row) {
+        for (char v : vars) {
+            const auto& vec = varBoolMap.at(v);
+            bool val = row < vec.size() ? vec[row] : false;
+            os << " " << (val ? "1" : "0") << " |";
+        }
+        os << "\n";
+    }
+
     return os;
 }
 

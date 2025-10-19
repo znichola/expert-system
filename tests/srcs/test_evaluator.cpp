@@ -62,6 +62,18 @@ int main()
     cout << "Testing boolean evaluator" << endl;
 
     testBooleanExprEvaluator();
+
+    // auto tokens = tokenizer("A=>B|G\nB=>C\nC=>D\nD=>A\n=A\nH=>K\nL=>H+K\n?D");
+    auto tokens = tokenizer("A=>B\nB=>C\nC=>D\nD=>A\n=Z\n?D");
+    auto [rules, facts, queries] = parseTokens(tokens);
+
+    Digraph digraph = makeDigraph(facts, rules);
+    Expr compiledExpr = digraph.compileExprForFact('C');
+    cout << "" << compiledExpr << endl;
+
+    auto res = digraph.boolMapEvaluate(compiledExpr);
+
+    cout << "ALKSDJ\n" << res << endl;
 }
 
 void testBooleanExprEvaluator() {
