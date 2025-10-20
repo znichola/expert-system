@@ -23,3 +23,6 @@ M ^ (N + O) => P        # M xor (N and O) implies P
 # Expected:
 # True: A,B,C,D,E,F,G,H,J,K,Q
 # False: I, L, M, N, O, P
+
+# Expected
+# True
