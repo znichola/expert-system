@@ -24,6 +24,10 @@ make re
 # open a browser to localhost:7711
 ```
 
+> see `dockerfile` for docker build & publish instructions
+
+A version of the app is deployed with onrender on [expert-system-chc0.onrender.com/](https://expert-system-chc0.onrender.com/).
+
 ## Useful links
 
 

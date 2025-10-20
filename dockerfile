@@ -30,7 +30,7 @@ RUN make all \
 EXPOSE 7711
 
 # Default command (start the app)
-ENTRYPOINT ["./expert-system", "--server", "--port=7711"]
+ENTRYPOINT ["./expert-system", "--server", "--explain", "--port=7711", "00_socrates.txt"]
 
 # Build the image
 # docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) -t znichola/expert-system:latest .
