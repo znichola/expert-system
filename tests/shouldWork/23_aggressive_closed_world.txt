@@ -1,0 +1,5 @@
+A+B=>C
+C+T<=>R
+=ATR
+?CR
+# an aggressive closed world would lead to a contradiction in the ruleset

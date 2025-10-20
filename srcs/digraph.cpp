@@ -44,16 +44,41 @@ Fact::State Digraph::determinFinalState(Fact::State solverRes, const VarBoolMap 
 
     Fact::State boolMapResult = all_true ? Fact::State::True : all_false ? Fact::State::False : Fact::State::Undetermined;
 
+    // Closed-world assumption: check if this fact is the only one differing
+    if (boolMapResult == Fact::State::Undetermined) {
+        bool differsOnlyHere = true;
+
+        for (const auto &[other_id, other_values] : boolMap) {
+            if (other_id == fact_id) continue;
+            if (other_values.size() != values.size()) continue; // inconsistent data, skip
+
+            for (size_t i = 0; i < values.size(); ++i) {
+                // if any other fact changes when this one changes, not closed-world false
+                if (other_values[i] != other_values.front()) {
+                    differsOnlyHere = false;
+                    break;
+                }
+            }
+            if (!differsOnlyHere) break;
+        }
+
+        if (differsOnlyHere) {
+            if (isExplain)
+                explanation << fact_id << ": Determined false by closed-world assumption (only it changes)\n";
+            boolMapResult = Fact::State::False;
+        }
+    }
+
     if (solverRes == boolMapResult) return solverRes;
 
     if (solverRes == Fact::State::Undetermined) {
         if (isExplain)
-            explanation << fact_id << ": Defering to truth table evaluation\n";
+            explanation << fact_id << ": Deferring to truth table evaluation\n";
         return boolMapResult;
     }
 
     if (isExplain)
-        explanation << fact_id << ": Oups.. solver and boolean table disagree on fact, defering to solver\n";
+        explanation << fact_id << ": Oops.. solver and boolean table disagree on fact, deferring to solver\n";
     return solverRes;
 }
 

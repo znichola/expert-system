@@ -1,0 +1,5 @@
+C<=>!V
+F<=>P
+V<=>S
+=CVFPVS
+?X
