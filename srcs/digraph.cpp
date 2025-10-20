@@ -72,7 +72,7 @@ Fact::State Digraph::determinFinalState(Fact::State solverRes, const VarBoolMap 
 
         if (differsOnlyHere) {
             if (isExplain)
-                explanation << fact_id << ": Determined false by closed-world assumption (only it changes)\n";
+                explanation << fact_id << ": Determined false by closed-world assumption (only this fact changes)\n";
             boolMapResult = Fact::State::False;
         }
     }

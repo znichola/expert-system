@@ -3,6 +3,27 @@
 An expert system in proposal calculation. In other words, a program that can
 reason on a set of rules and initial facts to deduce other facts.
 
+## Quick start
+
+Quick start with cli tool.
+```bash
+make all
+./expert-system --explain 00_socrates.txt
+```
+
+Server mod + graphviz for node graph visualisation
+```bash
+# download graphviz bundle
+make external_deps/graphviz-13.1.2
+# build graph viz in $HOME/graphviz
+make graphviz
+# rebuild
+make re
+
+./expert-system --explain --server 00_socrates.txt
+# open a browser to localhost:7711
+```
+
 ## Useful links
 
 

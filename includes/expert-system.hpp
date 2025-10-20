@@ -239,7 +239,8 @@ inline std::ostream& operator<<(std::ostream& os, const InputOptions& opt) {
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph::VarBoolMap& varBoolMap) {
     if (varBoolMap.empty()) {
-        os << "(empty VarBoolMap)\n";
+        os << "Emty truth table — no combination of variables satisfies all rules; there is a contradiction in the rule set.\n";
+        // os << "(empty VarBoolMap)\n";
         return os;
     }
 
