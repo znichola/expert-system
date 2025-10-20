@@ -1,4 +1,5 @@
 #include <set>
+#include <functional>
 
 #include "expert-system.hpp"
 #include "vector_helper.hpp"
