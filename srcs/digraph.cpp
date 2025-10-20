@@ -34,6 +34,14 @@ Digraph::SolveRes Digraph::solveEverythingNoThrow(const std::vector<Query> &quer
 }
 
 Fact::State Digraph::determinFinalState(Fact::State solverRes, const VarBoolMap &boolMap, char fact_id) {
+  
+    if (!boolMap.contains(fact_id)) {
+        if (isExplain)
+            explanation << fact_id 
+            << ": Truth table is empty — no combination of variables satisfies all rules; there is a contradiction in the rule set.\n";
+        return solverRes;
+    }
+
     const auto &values = boolMap.at(fact_id);
 
     if (values.empty()) return solverRes;

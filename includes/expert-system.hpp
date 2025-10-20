@@ -239,7 +239,7 @@ inline std::ostream& operator<<(std::ostream& os, const InputOptions& opt) {
 
 inline std::ostream& operator<<(std::ostream& os, const Digraph::VarBoolMap& varBoolMap) {
     if (varBoolMap.empty()) {
-        os << "(empty VarBoolMap)";
+        os << "(empty VarBoolMap)\n";
         return os;
     }
 
