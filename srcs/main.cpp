@@ -29,12 +29,11 @@ int main(int argc, char ** argv) {
     // MAIN ENTRY POINT
     while (true) {
         Digraph digraph;
-        digraph.isExplain = opts.isExplain;
-
         try {
             std::vector<Token> tokens = tokenizer(input);
             auto [rules, facts, queries] = parseTokens(tokens);
             digraph = makeDigraph(facts, rules);
+            digraph.isExplain = opts.isExplain;
             digraph.applyWorldAssumption(opts.isOpenWorldAssumption);
 
             auto [conclusion, explanation, isError] = digraph.solveEverythingNoThrow(queries);

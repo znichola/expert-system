@@ -12,3 +12,4 @@ libES.a
 expert-system
 .timetracker
 external_deps
+lib
