@@ -18,6 +18,9 @@ COPY . .
 ENV GV_PREFIX=/usr
 ENV WITH_GRAPHVIZ=1
 
+ARG GIT_COMMIT
+RUN echo "Git version<" ${GIT_COMMIT} ">"
+
 # Build the project
 RUN make fclean
 RUN make all \

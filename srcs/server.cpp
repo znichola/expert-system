@@ -383,13 +383,6 @@ static std::string genGraphImg(const Digraph &digraph) {
 #define XSTR(x) STR(x)
 
 static std::string footer() {
-    static const std::string git_url =
-#ifdef GIT_COMMIT
-        "https://github.com/znichola/expert-system/tree/" XSTR(GIT_COMMIT);
-#else
-        "https://github.com/znichola/expert-system";
-#endif
-
     static const std::string git_text =
 #ifdef GIT_COMMIT
         XSTR(GIT_COMMIT);
@@ -405,8 +398,9 @@ static std::string footer() {
 #endif
 
     return "<footer style='padding-bottom: 0.2em;'>"
-           "Build: <a href='" + git_url + "' style='color:#D1A980; text-decoration:none;'>" +
-           git_text +
+           "Build: <a href='https://github.com/znichola/expert-system" + (git_text == "" ? "" : "/tree/" + git_text) 
+           + "' style='color:#D1A980; text-decoration:none;'>" +
+           (git_text == "" ? "github" : git_text) +
            "</a> &nbsp;&nbsp;|&nbsp;&nbsp; " + build_date +
            "</footer>\n";
 }
