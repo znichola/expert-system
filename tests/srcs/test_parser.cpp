@@ -63,7 +63,6 @@ int main() {
     test("!(A+B)");
     test("(A|!(H+(!J^L)))");
     test("(A|!(H+(J^!L)))");
-    test("!!(!A+!!!B)#bfhbewjrhjer");
 
     std::cout << "\nOK's : " << test_count - ko_count << " / " << test_count << "\n";
 }

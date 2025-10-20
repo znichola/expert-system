@@ -9,6 +9,8 @@ FAILED=0
 PASSED=0
 TOTAL=0
 
+make
+
 for file in tests/shouldNotWork/*.txt; do
     echo TESTING FILE $file
     TOTAL=$((TOTAL + 1))
