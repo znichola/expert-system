@@ -80,7 +80,7 @@ void WebServer::registerGetRoutes() {
         try {
             std::vector<Token> tokens = tokenizer(rules);
             auto [rules, facts, queries] = parseTokens(tokens);
-            Digraph digraph = makeDigraph(facts, rules);
+            Digraph digraph = makeDigraph(facts, rules, queries);
             digraph.isExplain = opts.isExplain;
             img = genGraphImg(digraph);
             digraph.applyWorldAssumption(opts.isOpenWorldAssumption);

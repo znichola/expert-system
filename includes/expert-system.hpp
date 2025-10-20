@@ -214,7 +214,8 @@ inline std::ostream& operator<<(std::ostream& os, const Digraph& g) {
 
 Digraph makeDigraph(
         const std::vector<Fact> &facts,
-        const std::vector<Rule> &rules
+        const std::vector<Rule> &rules,
+        const std::vector<Query> &queries
     );
 
 

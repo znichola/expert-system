@@ -747,12 +747,17 @@ Expr Digraph::compileExprForFact(const char fact_id) {
 
 Digraph makeDigraph(
         const std::vector<Fact> &facts,
-        const std::vector<Rule> &rules
+        const std::vector<Rule> &rules,
+        const std::vector<Query> &quries
     ) {
     Digraph g;
 
     for (const auto &f : facts) {
         g.addFact(f);
+    }
+
+    for (const auto &q : quries) {
+        g.addFact(Fact(q.label, Fact::State::Undetermined));
     }
 
     for (const auto &r : rules) {

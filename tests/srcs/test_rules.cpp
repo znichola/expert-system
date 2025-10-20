@@ -110,7 +110,7 @@ bool runTest (const Test& test) {
 
     Digraph digraph;
     try {
-        digraph = makeDigraph(facts, rules);
+        digraph = makeDigraph(facts, rules, queries);
     } catch (const std::exception& e) {
         std::cerr << "MakeDigraph error: " << e.what() << std::endl;
         return false;

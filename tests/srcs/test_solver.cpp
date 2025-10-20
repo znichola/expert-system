@@ -20,7 +20,7 @@ void runTest(const Test &t) {
     auto tokens = tokenizer(t.ruleSet);
     auto [rules, facts, queries] = parseTokens(tokens);
 
-    Digraph digraph = makeDigraph(facts, rules);
+    Digraph digraph = makeDigraph(facts, rules, queries);
     digraph.applyWorldAssumption(false);
 
     bool failed = false;

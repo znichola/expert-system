@@ -19,7 +19,7 @@ void runTest(const Test &t) {
     auto tokens = tokenizer(t.ruleSet);
     auto [rules, facts, queries] = parseTokens(tokens);
 
-    Digraph digraph = makeDigraph(facts, rules);
+    Digraph digraph = makeDigraph(facts, rules, queries);
     digraph.applyWorldAssumption(false);
 
     bool failed = false;
@@ -67,7 +67,7 @@ int main()
     auto tokens = tokenizer("A=>B\nB=>C\nC=>D\nD=>A\n=Z\n?D");
     auto [rules, facts, queries] = parseTokens(tokens);
 
-    Digraph digraph = makeDigraph(facts, rules);
+    Digraph digraph = makeDigraph(facts, rules, queries);
     Expr compiledExpr = digraph.compileExprForFact('C');
     cout << "" << compiledExpr << endl;
 
@@ -82,7 +82,7 @@ void testBooleanExprEvaluator() {
     auto tokens = tokenizer("A=>B\n=A\n?B");
     auto [rules, facts, queries] = parseTokens(tokens);
 
-    Digraph digraph = makeDigraph(facts, rules);
+    Digraph digraph = makeDigraph(facts, rules, queries);
     digraph.applyWorldAssumption(false);
 
     const Expr::VarMap varMap({{'A', true}, {'B', true}});

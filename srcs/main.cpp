@@ -32,7 +32,7 @@ int main(int argc, char ** argv) {
         try {
             std::vector<Token> tokens = tokenizer(input);
             auto [rules, facts, queries] = parseTokens(tokens);
-            digraph = makeDigraph(facts, rules);
+            digraph = makeDigraph(facts, rules, queries);
             digraph.isExplain = opts.isExplain;
             digraph.applyWorldAssumption(opts.isOpenWorldAssumption);
 
