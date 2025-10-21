@@ -87,7 +87,7 @@ InputOptions parseInput(int ac, char **av) {
             res.isDot = true;
         else if (s == "--interactive" || s == "-i")
             res.isInteractive = true;
-        else if (s == "--custom" || s == "-c")
+        else if (s == "--bonus" || s == "-b")
             res.isCustom = true;
         // else if (s == "--openWorldAssumption")
         //     res.isOpenWorldAssumption = true;

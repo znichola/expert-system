@@ -28,17 +28,21 @@ std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
     vector<Query> queries = parseQueries(input);
     vector<Fact> facts = parseFacts(input);
 
+    size_t facts_line_number = -1;
     if (queries.empty())
         throw std::runtime_error("No queries found in input");
-    if (facts.empty())
-        throw std::runtime_error("No facts found in input");
+    for (auto const &i : input) {
+        if (i.type == Token::Type::Fact) {
+            facts_line_number = i.line_number;
+        }
+    }
 
     
     size_t i = 0;
     while (i < input.size())
     {
         if (input[i].line_number == queries[0].line_number ||
-            input[i].line_number == facts[0].line_number) {
+            input[i].line_number == facts_line_number) {
             i++;
             continue; // skip facts and queries lines
         }
