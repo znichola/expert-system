@@ -87,6 +87,8 @@ InputOptions parseInput(int ac, char **av) {
             res.isDot = true;
         else if (s == "--interactive" || s == "-i")
             res.isInteractive = true;
+        else if (s == "--custom" || s == "-c")
+            res.isCustom = true;
         // else if (s == "--openWorldAssumption")
         //     res.isOpenWorldAssumption = true;
         else if (s.starts_with("--port="))
@@ -174,6 +176,7 @@ bool isHelpPrint(const InputOptions &opts , char *argv0) {
     << std::endl << "  -e, --explain              Print explanation of the reasoning process"
     << std::endl << "  -d, --dot                  Output reasoning as a Graphviz DOT file"
     << std::endl << "  -i, --interactive          Enable interactive mode (modify facts after evaluation)"
+    << std::endl << "  -c, --custom               Enable custom CWD implementation, it's aggressive by default"
     // << std::endl << "      --openWorldAssumption  Use Open World Assumption (default is Closed World)"
     << std::endl;
 

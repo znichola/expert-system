@@ -20,6 +20,7 @@ struct InputOptions {
     bool isExplain = false;
     bool isDot = false;
     bool isInteractive = false;
+    bool isCustom = false;
     bool isOpenWorldAssumption = false;
 
 };
