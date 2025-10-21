@@ -33,31 +33,37 @@ struct Parser {
     ** It returns an Expr representing the new node.
     ** It throws an error message and returns an Empty expression for unknown operators.
     */
-    Expr    createNode(const Token &token, const Expr &lhs, const Expr &rhs)
+    Expr createNode(const Token &token, const Expr &lhs, const Expr &rhs)
     {
         switch (token.token_list[0]){
-            case '+':
-                return And(lhs, rhs);
-                break;
-            case '|':
-                return Or(lhs, rhs);
-                break;
-            case '^':
-                return Xor(lhs, rhs);
-                break;
-            case '=':
-                return Imply(lhs, rhs);
-                break;
-            case '<':
-                return Iff(lhs, rhs);
-                break;
-            case '!':
-                return Not(lhs);
-                break;
-            default:
-                break;
+            case '+': return And(lhs, rhs);
+            case '|': return Or(lhs, rhs);
+            case '^': return Xor(lhs, rhs);
+            case '=': return Imply(lhs, rhs);
+            case '<': return Iff(lhs, rhs);
+            case '!': return Not(lhs);
+            default:  break;
         }
         throw std::runtime_error("Parse error: unknown operator '" + token.token_list + "'");
+    }
+
+    enum class Assoc { LEFT, RIGHT };
+    
+    /**
+     * Get precedence for operators (higher number = tighter binding)
+     */
+    std::pair<int, Assoc> getPrec(const Token &token) const
+    {
+        switch (token.token_list[0]){
+            case '<': return {1, Assoc::RIGHT };
+            case '=': return {2, Assoc::RIGHT };
+            case '^': return {3, Assoc::LEFT };
+            case '|': return {4, Assoc::LEFT };
+            case '+': return {5, Assoc::LEFT };
+            case '!': return {6, Assoc::LEFT };
+            default:  break;
+        }
+        throw std::runtime_error("Parse error: unknown precedence for '" + token.token_list + "'");
     }
     
     /*
@@ -106,12 +112,16 @@ struct Parser {
     ** It returns an optional Expr, which is empty if parsing fails.
     ** It throws exceptions for syntax errors.
     */
-    std::optional<Expr> parseExpr() {
+    std::optional<Expr> parseExpr(int min_prec = 0) {
         auto lhs = parseFactor();
         while (lhs && current() && current()->type == Token::Type::Operator) {
             auto op = *current();
+            const auto [prec, assoc] = getPrec(op);
+            if (prec < min_prec)
+                break;
             index++;
-            auto rhs = parseFactor();
+            int next_min = (assoc == Assoc::LEFT) ? prec + 1 : prec;
+            auto rhs = parseExpr(next_min);
             if (!rhs) throw std::runtime_error("Expected factor after operator: " + op.token_list);
             lhs = createNode(op, *lhs, *rhs);
         }

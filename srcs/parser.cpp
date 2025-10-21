@@ -49,6 +49,7 @@ std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
         auto [newI, lineTokens, comment] = getNextLine(input, i);
         i = newI;
         if (!lineTokens.empty()) {
+            // TODO remove this now that the parser can do precedence
             // add parentheses around the entire expression
             // to be sure that the conclusion and the premis are well separated
             lineTokens.push_back(Token(")", lineTokens[0].line_number, Token::Type::Parenthese));
@@ -68,9 +69,9 @@ std::tuple<vector<Rule>, vector<Fact>, vector<Query>>
                 rules.push_back(Rule(expr, lineTokens[0].line_number, comment));
                 // printf("Parsed rule: %s\n", rules.back().toString().c_str());
             } catch (const std::exception &e) {
-                std::cerr << "Line: " << lineTokens[0].line_number << " :" << e.what() << std::endl;
-                //! TODO for now just exit, later we might want to ask the user if they want to change the input
-                exit(1);
+                std::stringstream ss;
+                ss << "Line: " << lineTokens[0].line_number << " :" << e.what() << std::endl;
+                throw std::runtime_error(ss.str());
             }
         }
     }
