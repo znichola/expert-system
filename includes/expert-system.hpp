@@ -180,6 +180,9 @@ struct Digraph {
     bool isExplain = false;
     bool isClosedWorldAssumption = true;
     std::ostringstream explanation;
+    std::map<char, Expr> compiled_expressions;
+    std::set<std::string> useless_rules;
+    std::set<char> defered_set_false; // defer set as false 
 
 //    FactMap  questFacts; // facts for which a search is already launched
     int countDeterminedAntecedents(const std::string& rule_id);
@@ -195,6 +198,7 @@ struct Digraph {
     Fact::State solveForFact(const char fact_id);
     Fact::State solveRule(const std::string &rule_id);
 
+    bool isLeafRule(const std::string &rule_id) const;
     bool isFactInAmbiguousConclusion(char fact_id) const;
     void setExprVarsToState(const Expr &expr, const Fact::State state);
 

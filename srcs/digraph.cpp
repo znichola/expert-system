@@ -8,15 +8,20 @@ Digraph::SolveRes Digraph::solveEverythingNoThrow(const std::vector<Query> &quer
     std::ostringstream conclusion;
     std::ostringstream explanation;
     bool isError = false;
-    std::map<char, Expr> compiledExpressions;
     for (const auto &query : queries) {
         auto e = compileExprForFact(query.label);
-        compiledExpressions.insert({query.label, e});
+        compiled_expressions.insert({query.label, e});
+    }
+    for (const auto &fact : facts) {
+        if (compiled_expressions.find(fact.second.id) == compiled_expressions.end()) {
+            auto e = compileExprForFact(fact.second.id);
+            compiled_expressions.insert({fact.second.id, e});
+        }
     }
     for (const auto &query : queries) {
         try {
             auto res = solveForFact(query.label);
-            auto expr = compiledExpressions.at(query.label);
+            auto expr = compiled_expressions.at(query.label);
             auto table = boolMapEvaluate(expr);
             res = determinFinalState(res, table, query.label);
             conclusion << query.label << " is " << res << std::endl;
@@ -29,6 +34,10 @@ Digraph::SolveRes Digraph::solveEverythingNoThrow(const std::vector<Query> &quer
     }
     if (isExplain) {
         explanation << "OPERATIONS\n" << this->explanation.str();
+        // explanation << "USELESS RUELS\n";
+        // for (auto r : useless_rules) {
+        //     explanation << r << "\n";
+        // }
     }
     return {conclusion.str(), explanation.str(), isError};
 }
@@ -446,13 +455,76 @@ Fact::State Digraph::solveForFact(const char fact_id) {
         if (isExplain) {
             explanation << "solveForFact " << fact_id << ": solving " << r << std::endl;
         }
-        solveRule(r); // TODO do we need a check if the rule returns true, (it should always be true, I think?)
+
+        solveRule(r);
+
+        // This mess is here to propagate undetermined facts which should be set at False
+        // it uses a global useless rules list, rules that have false in 
+        // the lhs & no interdependance (iff does not work) are marked and the lhs is set to False
+        // unless it's already defined somewhere. It's not perfect but passes the
+        auto fact_it = facts.find(fact_id);
+        if (fact_it != facts.end() && fact_it->second.state == Fact::State::Undetermined && isLeafRule(r)) {
+            auto rule_it = rules.find(r);
+            if (rule_it == rules.end()) break;
+            const Rule &rule = rule_it->second;
+            auto foo = rule.expr.getValues();
+            if (foo.lhs && foo.rhs) {
+                auto lhs_res = solveExpr(foo.lhs.value());
+                if (lhs_res == Fact::State::False) {
+                    explanation << "" << r << " is a useless rule, adding rhs facts to defered false\n"; 
+                    useless_rules.insert(r);
+                    for (auto f : foo.rhs.value().getAllFacts()) {
+                        auto res = solveForFact(f);
+                        if (res == Fact::State::Undetermined) {
+                            defered_set_false.insert(f);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Remove from solving stack
     solving_stack.erase(fact_id);
 
+    if (defered_set_false.find(fact_id) != defered_set_false.end()) {
+        auto fact_it = facts.find(fact_id);
+        if (fact_it != facts.end() && fact_it->second.state == Fact::State::Undetermined ) {
+            fact_it->second.state = Fact::State::False;
+            defered_set_false.erase(fact_id);
+        }
+    }
+
     return fact.state;
+}
+
+// A rule is considered a "leaf" if
+// it has no rules that depend on its antecedent facts
+// it has 
+bool Digraph::isLeafRule(const std::string &rule_id) const {
+    auto rule_it = rules.find(rule_id);
+    if (rule_it == rules.end()) {
+        throw std::runtime_error("Rule not found: " + rule_id);
+    }
+
+    const Rule &rule = rule_it->second;
+    for (const auto &fact_id : rule.antecedent_facts) {
+        auto fact_it = facts.find(fact_id);
+        if (fact_it == facts.end()) continue;
+
+        const Fact &fact = fact_it->second;
+        for (const auto &dependent_rule_id : fact.consequent_rules) {
+            // Skip useless rules
+            if (std::find(useless_rules.begin(), useless_rules.end(), dependent_rule_id)
+                != useless_rules.end()) {
+                continue;
+            }
+            // If this fact feeds into any non-useless rule, it's not a leaf
+            return false;
+        }
+    }
+
+    return true;
 }
 
 // Helper function to count determined antecedents in a rule
